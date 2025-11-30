@@ -65,7 +65,8 @@ class StartScreen extends StatelessWidget {
                 const SizedBox(height: 380),
 
                 // 🟩 BOTÓN GOOGLE PREMIUM (CENTRADO)
-                _googleButton(),
+                _googleButton(context),
+
 
                 const SizedBox(height: 35),
 
@@ -83,7 +84,8 @@ class StartScreen extends StatelessWidget {
   // =====================================================
   // 🔵 BOTÓN GOOGLE PREMIUM (ICONO A LA IZQUIERDA)
   // =====================================================
-  Widget _googleButton() {
+  Widget _googleButton(BuildContext context) {
+
     return Container(
       width: 330,
       height: 58,
@@ -100,7 +102,10 @@ class StartScreen extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(30),
-        onTap: () {},
+        onTap: () {
+          Navigator.pushNamed(context, "/treatment_form");
+        },
+
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center, // ← CENTRADO REAL
           children: [

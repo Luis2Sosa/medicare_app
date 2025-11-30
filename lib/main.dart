@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
-import 'package:medicare_app/modules/auth/screens/start_screen.dart';
 
-import 'modules/auth/screens/about/about_screen.dart'; // ← IMPORTANTE
+// 🔵 IMPORTS DE PANTALLAS
+import 'package:medicare_app/modules/auth/screens/start_screen.dart';
+import 'package:medicare_app/modules/auth/screens/about/about_screen.dart';
+import 'package:medicare_app/modules/treatments/screens/treatment_form_screen.dart';
+import 'package:medicare_app/modules/home/main_nav_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,12 +22,17 @@ class MediCareApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.themeData,
 
-      // 🔵 ESTA ERA LA PIEZA QUE FALTABA
+      // 🔵 RUTAS REGISTRADAS
       routes: {
         "/about": (context) => const AboutScreen(),
+        "/treatment_form": (context) => const TreatmentFormScreen(),
+        "/home_nav": (context) => const MainNavScreen(),    // ← AGREGADA
       },
 
+      // 🔵 PANTALLA INICIAL
       home: const StartScreen(),
     );
   }
 }
+
+
