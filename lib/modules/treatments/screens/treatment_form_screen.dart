@@ -160,7 +160,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
     );
   }
 
-  // CARD
+  // CARD[ajuste]
   Widget _inputCard({required Widget child}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
