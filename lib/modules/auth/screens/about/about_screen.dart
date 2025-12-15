@@ -23,14 +23,14 @@ class AboutScreen extends StatelessWidget {
               child: Center(
                 child: Image.asset(
                   "assets/images/medicare_logo.png",
-                  width: 350, // ← MAS GRANDE
+                  width: 270, // ← MAS GRANDE
                 ),
               ),
             ),
 
             // ⭐ CONTENIDO FIJO AGRANDADO
             Positioned(
-              top: 260, // ← BAJADO UN POCO POR EL LOGO MÁS GRANDE
+              top: 200, // ← BAJADO UN POCO POR EL LOGO MÁS GRANDE
               left: 25,
               right: 25,
               child: Column(
@@ -41,7 +41,7 @@ class AboutScreen extends StatelessWidget {
                   const Text(
                     "Sobre MediCare",
                     style: TextStyle(
-                      fontSize: 30,   // ← MÁS GRANDE
+                      fontSize: 25,   // ← MÁS GRANDE
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.4,
                       color: AppTheme.primaryBlue,
