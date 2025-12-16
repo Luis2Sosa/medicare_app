@@ -103,7 +103,7 @@ class StartScreen extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(30),
         onTap: () {
-          Navigator.pushNamed(context, "/treatment_form");
+          Navigator.pushReplacementNamed(context, "/home");
         },
 
         child: Row(

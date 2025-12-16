@@ -26,7 +26,7 @@ class MediCareApp extends StatelessWidget {
       routes: {
         "/about": (context) => const AboutScreen(),
         "/treatment_form": (context) => const TreatmentFormScreen(),
-        "/home_nav": (context) => const MainNavScreen(),    // ← AGREGADA
+        "/home": (context) => const MainNavScreen(initialIndex: 0),
       },
 
       // 🔵 PANTALLA INICIAL
@@ -34,5 +34,3 @@ class MediCareApp extends StatelessWidget {
     );
   }
 }
-
-
