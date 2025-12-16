@@ -1,27 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
+import 'package:medicare_app/modules/treatments/screens/treatment_list_screen.dart';
 
-// 🔵 IMPORTS CORRECTOS DE CADA MÓDULO
-import 'package:medicare_app/modules/treatments/screens/treatment_form_screen.dart';
+
+// 🔵 IMPORTS DE CADA MÓDULO
+import 'package:medicare_app/modules/treatments/screens/treatment_list_screen.dart';
 import 'package:medicare_app/modules/alarms/screens/alarm_home_screen.dart';
 import 'package:medicare_app/modules/history/screens/history_screen.dart';
 
 class MainNavScreen extends StatefulWidget {
-  const MainNavScreen({super.key});
+  final int initialIndex;
+
+  const MainNavScreen({
+    super.key,
+    this.initialIndex = 0,
+  });
 
   @override
   State<MainNavScreen> createState() => _MainNavScreenState();
 }
 
 class _MainNavScreenState extends State<MainNavScreen> {
-  int index = 0;
+  late int index;
 
-  // ❌ No puede ser const porque los widgets no son const
-  final screens = [
-    TreatmentFormScreen(),
+  final List<Widget> screens = const [
+    TreatmentListScreen(),
     AlarmHomeScreen(),
     HistoryScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    index = widget.initialIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +48,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
               color: Colors.black.withOpacity(0.08),
               blurRadius: 10,
               offset: const Offset(0, -3),
-            )
+            ),
           ],
         ),
         child: BottomNavigationBar(
@@ -45,12 +57,10 @@ class _MainNavScreenState extends State<MainNavScreen> {
           backgroundColor: Colors.white,
           selectedItemColor: AppTheme.primaryBlue,
           unselectedItemColor: Colors.grey,
-
           onTap: (i) => setState(() => index = i),
-
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle_outline),
+              icon: Icon(Icons.medication),
               label: "Tratamientos",
             ),
             BottomNavigationBarItem(

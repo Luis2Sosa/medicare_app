@@ -27,120 +27,129 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 22),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
+            child: Column(
+              children: [
 
-                  const SizedBox(height: 0),
+                // 👉 FORMULARIO (SCROLL)
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 10),
 
-                  Image.asset(
-                    "assets/images/medicare_logo.png",
-                    width: 140,
-                  ),
-
-                  const SizedBox(height: 0),
-
-                  const Text(
-                    "Registrar tratamiento",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryBlue,
-                    ),
-                  ),
-
-                  const SizedBox(height: 0),
-
-                  const Text(
-                    "Añade tus medicamentos fácilmente",
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.black54,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // NOMBRE
-                  _label("Nombre del medicamento"),
-                  _inputCard(
-                    child: TextField(
-                      controller: nameCtrl,
-                      style: const TextStyle(fontSize: 18),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: "Ej: Amoxicilina",
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // DOSIS
-                  _label("Dosis"),
-                  _segmentSelector(
-                    items: ["1 tableta", "2 tabletas", "Media tableta"],
-                    selected: dosis,
-                    onSelect: (v) => setState(() => dosis = v),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // FRECUENCIA
-                  _label("Frecuencia"),
-                  _segmentSelector(
-                    items: [
-                      "Cada 8 horas",
-                      "Cada 12 horas",
-                      "Cada 24 horas",
-                    ],
-                    selected: frecuencia,
-                    onSelect: (v) => setState(() => frecuencia = v),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // HORA DE LA ALARMA
-                  _label("Hora de alarma"),
-                  _inputCard(
-                    child: GestureDetector(
-                      onTap: _pickTime,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              selectedTime == null
-                                  ? "Seleccionar hora"
-                                  : "${selectedTime!.hour}:${selectedTime!.minute.toString().padLeft(2, '0')}",
-                              style: const TextStyle(fontSize: 18),
-                            ),
-                            const Icon(Icons.access_time,
-                                color: AppTheme.primaryBlue),
-                          ],
+                        Image.asset(
+                          "assets/images/medicare_logo.png",
+                          width: 160,
                         ),
-                      ),
+
+                        const SizedBox(height: 10),
+
+                        const Text(
+                          "Registrar tratamiento",
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryBlue,
+                          ),
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        const Text(
+                          "Añade tus medicamentos fácilmente",
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.black54,
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        _label("Nombre del medicamento"),
+                        _inputCard(
+                          child: TextField(
+                            controller: nameCtrl,
+                            style: const TextStyle(fontSize: 18),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              hintText: "Ej: Amoxicilina",
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 25),
+
+                        _label("Dosis"),
+                        _segmentSelector(
+                          items: ["1 tableta", "2 tabletas", "Media tableta"],
+                          selected: dosis,
+                          onSelect: (v) => setState(() => dosis = v),
+                        ),
+
+                        const SizedBox(height: 25),
+
+                        _label("Frecuencia"),
+                        _segmentSelector(
+                          items: [
+                            "Cada 8 horas",
+                            "Cada 12 horas",
+                            "Cada 24 horas",
+                          ],
+                          selected: frecuencia,
+                          onSelect: (v) => setState(() => frecuencia = v),
+                        ),
+
+                        const SizedBox(height: 25),
+
+                        _label("Hora de alarma"),
+                        _inputCard(
+                          child: GestureDetector(
+                            onTap: _pickTime,
+                            child: Container(
+                              padding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                              child: Row(
+                                mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    selectedTime == null
+                                        ? "Seleccionar hora"
+                                        : "${selectedTime!.hour}:${selectedTime!.minute.toString().padLeft(2, '0')}",
+                                    style: const TextStyle(fontSize: 18),
+                                  ),
+                                  const Icon(Icons.access_time,
+                                      color: AppTheme.primaryBlue),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+                        // 🔒 Escaneo por código de barras (FASE 2)
+                        //_scanButton(),
+
+                        const SizedBox(height: 120), // 👈 espacio extra
+                      ],
                     ),
                   ),
+                ),
 
-                  const SizedBox(height: 30),
-
-                  _scanButton(),
-
-                  const SizedBox(height: 40),
-
-                  _saveButton(),
-
-                  const SizedBox(height: 20),
-                ],
-              ),
+                // 👉 BOTÓN FIJO
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _saveButton(),
+                ),
+              ],
             ),
           ),
         ),
+
       ),
     );
   }
