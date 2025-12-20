@@ -1,377 +1,328 @@
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
 
-class HistoryScreen extends StatefulWidget {
+class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 
-  @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
-}
-
-class _HistoryScreenState extends State<HistoryScreen> {
-  String selectedFilter = "Todos"; // Todos, Completados, Omitidos
-
-  // TODO: Reemplazar con datos reales desde un servicio
-  final List<Map<String, dynamic>> historyData = [
+  static final List<Map<String, dynamic>> historyData = [
     {
       'medicamento': 'Amoxicilina',
-      'dosis': '1 tableta',
-      'frecuencia': 'Cada 8 horas',
-      'fechaInicio': '24 de abril',
-      'fechaFin': '30 de abril',
-      'tomasTotales': 21,
-      'tomasCompletadas': 21,
-      'estado': 'Completado',
+      'fecha': '24 de abril',
+      'hora': '9:00 AM',
+      'tomado': true,
     },
     {
       'medicamento': 'Ibuprofeno',
-      'dosis': '1 tableta',
-      'frecuencia': 'Cada 12 horas',
-      'fechaInicio': '10 de mayo',
-      'fechaFin': '17 de mayo',
-      'tomasTotales': 14,
-      'tomasCompletadas': 12,
-      'estado': 'Completado',
+      'fecha': '24 de abril',
+      'hora': '2:00 PM',
+      'tomado': true,
+    },
+    {
+      'medicamento': 'Amoxicilina',
+      'fecha': '24 de abril',
+      'hora': '5:00 PM',
+      'tomado': false,
     },
     {
       'medicamento': 'Loratadina',
-      'dosis': '1 tableta',
-      'frecuencia': '1 diaria',
-      'fechaInicio': '1 de marzo',
-      'fechaFin': '15 de marzo',
-      'tomasTotales': 15,
-      'tomasCompletadas': 14,
-      'estado': 'Completado',
+      'fecha': '23 de abril',
+      'hora': '9:00 PM',
+      'tomado': true,
+    },
+    {
+      'medicamento': 'Amoxicilina',
+      'fecha': '23 de abril',
+      'hora': '9:00 AM',
+      'tomado': true,
     },
   ];
 
-  List<Map<String, dynamic>> get filteredHistory {
-    if (selectedFilter == "Todos") return historyData;
-    if (selectedFilter == "Completados") {
-      return historyData
-          .where((item) =>
-      item['tomasCompletadas'] == item['tomasTotales'])
-          .toList();
-    }
-    if (selectedFilter == "Omitidos") {
-      return historyData
-          .where((item) =>
-      item['tomasCompletadas'] < item['tomasTotales'])
-          .toList();
-    }
-    return historyData;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final tomados = historyData.where((e) => e['tomado'] == true).length;
+    final omitidos = historyData.length - tomados;
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // HEADER
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryBlue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.history,
-                          color: AppTheme.primaryBlue,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          "Historial",
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryBlue,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.filter_list),
-                        onPressed: _showFilterOptions,
-                        color: AppTheme.primaryBlue,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _statisticsRow(),
-                ],
-              ),
-            ),
-
-            // FILTROS
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: _filterChips(),
-            ),
-
-            // LISTA
-            Expanded(
-              child: filteredHistory.isEmpty
-                  ? _emptyState()
-                  : ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                physics: const BouncingScrollPhysics(),
-                itemCount: filteredHistory.length,
-                itemBuilder: (context, index) {
-                  return _historyCard(filteredHistory[index]);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _statisticsRow() {
-    final totalTreatments = historyData.length;
-    final totalDoses = historyData.fold<int>(
-        0, (sum, item) => sum + (item['tomasTotales'] as int));
-    final completedDoses = historyData.fold<int>(
-        0, (sum, item) => sum + (item['tomasCompletadas'] as int));
-    final adherence =
-    totalDoses > 0 ? (completedDoses / totalDoses * 100).round() : 0;
-
-    return Row(
-      children: [
-        _statBox("Tratamientos", "$totalTreatments", Icons.medication),
-        const SizedBox(width: 12),
-        _statBox("Adherencia", "$adherence%", Icons.trending_up),
-        const SizedBox(width: 12),
-        _statBox("Tomas", "$completedDoses/$totalDoses", Icons.check_circle),
-      ],
-    );
-  }
-
-  Widget _statBox(String label, String value, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.primaryBlue.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppTheme.primaryBlue.withOpacity(0.1),
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 20, color: AppTheme.primaryBlue),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryBlue,
-              ),
-            ),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Colors.black54,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _filterChips() {
-    return Row(
-      children: [
-        _filterChip("Todos"),
-        const SizedBox(width: 8),
-        _filterChip("Completados"),
-        const SizedBox(width: 8),
-        _filterChip("Omitidos"),
-      ],
-    );
-  }
-
-  Widget _filterChip(String label) {
-    final isSelected = selectedFilter == label;
-    return GestureDetector(
-      onTap: () => setState(() => selectedFilter = label),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryBlue : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppTheme.primaryBlue : Colors.grey.shade300,
-          ),
-        ),
-        child: Text(
-          label,
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF2E5C8A),
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          "Mi Historial",
           style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
           ),
         ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: Colors.grey.shade200,
+            height: 1,
+          ),
+        ),
+      ),
+      body: historyData.isEmpty ? _emptyState() : _buildList(tomados, omitidos),
+    );
+  }
+
+  Widget _buildList(int tomados, int omitidos) {
+    return Column(
+      children: [
+        // RESUMEN COMPACTO
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade50, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: Column(
+            children: [
+              const Text(
+                "Tu seguimiento",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2E5C8A),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _statBadge(
+                    icon: Icons.check_circle_rounded,
+                    count: tomados,
+                    label: "OK",
+                    color: Colors.green,
+                  ),
+                  const SizedBox(width: 16),
+                  _statBadge(
+                    icon: Icons.cancel_rounded,
+                    count: omitidos,
+                    label: "NO",
+                    color: Colors.red,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // LISTA
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            itemCount: historyData.length,
+            itemBuilder: (context, index) {
+              return _historyCard(historyData[index]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statBadge({
+    required IconData icon,
+    required int count,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 2,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  height: 1,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _historyCard(Map<String, dynamic> item) {
-    final completed = item['tomasCompletadas'] as int;
-    final total = item['tomasTotales'] as int;
-    final percentage = (completed / total * 100).round();
-    final isComplete = completed == total;
+    final bool tomado = item['tomado'] ?? false;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: tomado
+              ? [Colors.white, Colors.green.shade50.withOpacity(0.3)]
+              : [Colors.white, Colors.red.shade50.withOpacity(0.3)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: tomado ? Colors.green.shade200 : Colors.red.shade200,
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: (tomado ? Colors.green : Colors.red).withOpacity(0.12),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => _showDetailModal(item),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.medication,
-                        color: AppTheme.primaryBlue,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item['medicamento'],
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryBlue,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            "${item['dosis']} • ${item['frecuencia']}",
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      isComplete ? Icons.check_circle : Icons.warning_amber,
-                      color: isComplete ? Colors.green : Colors.orange,
-                      size: 28,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // ÍCONO
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: tomado
+                        ? [Colors.green.shade400, Colors.green.shade600]
+                        : [Colors.red.shade400, Colors.red.shade600],
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: (tomado ? Colors.green : Colors.red).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today,
-                        size: 14, color: Colors.grey),
-                    const SizedBox(width: 6),
-                    Text(
-                      "${item['fechaInicio']} – ${item['fechaFin']}",
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
+                child: Icon(
+                  tomado ? Icons.check_rounded : Icons.close_rounded,
+                  color: Colors.white,
+                  size: 24,
                 ),
-                const SizedBox(height: 12),
-                // BARRA DE PROGRESO
-                Column(
+              ),
+
+              const SizedBox(width: 14),
+
+              // NOMBRE
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Adherencia: $percentage%",
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        Text(
-                          "$completed/$total tomas",
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      item['medicamento'],
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2E5C8A),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: completed / total,
-                        minHeight: 8,
-                        backgroundColor: Colors.grey.shade200,
-                        color: isComplete ? Colors.green : AppTheme.primaryBlue,
+                    const SizedBox(height: 4),
+                    Text(
+                      item['fecha'],
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
+                ),
+              ),
+
+              // BADGE
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: tomado ? Colors.green : Colors.red,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (tomado ? Colors.green : Colors.red).withOpacity(0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  tomado ? "✓" : "✗",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // HORA
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.orange.shade200,
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 18,
+                  color: Colors.orange.shade700,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  item['hora'],
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade800,
+                  ),
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -383,174 +334,49 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.history_outlined,
-              size: 80,
-              color: Colors.grey.shade400,
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade100, Colors.blue.shade50],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.shade200.withOpacity(0.5),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  )
+                ],
+              ),
+              child: const Icon(
+                Icons.history_outlined,
+                size: 80,
+                color: Color(0xFF2E5C8A),
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              selectedFilter == "Todos"
-                  ? "No hay tratamientos en el historial"
-                  : "No hay tratamientos $selectedFilter",
+            const SizedBox(height: 32),
+            const Text(
+              "Sin historial aún",
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2E5C8A),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Aquí verás el registro de\ntus medicamentos",
+              style: TextStyle(
+                fontSize: 16,
                 color: Colors.grey.shade600,
+                height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showDetailModal(Map<String, dynamic> item) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => Padding(
-          padding: const EdgeInsets.all(24),
-          child: ListView(
-            controller: scrollController,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryBlue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.medication,
-                      color: AppTheme.primaryBlue,
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item['medicamento'],
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          item['estado'],
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _detailRow(Icons.medication_liquid, "Dosis", item['dosis']),
-              _detailRow(Icons.schedule, "Frecuencia", item['frecuencia']),
-              _detailRow(Icons.event, "Inicio", item['fechaInicio']),
-              _detailRow(Icons.event, "Fin", item['fechaFin']),
-              _detailRow(Icons.check_circle, "Tomas completadas",
-                  "${item['tomasCompletadas']}/${item['tomasTotales']}"),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    "Cerrar",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _detailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: AppTheme.primaryBlue),
-          const SizedBox(width: 12),
-          Text(
-            "$label:",
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showFilterOptions() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Opciones de filtro"),
-        content: const Text(
-            "Usa los chips debajo del título para filtrar tratamientos por estado."),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Entendido"),
-          ),
-        ],
       ),
     );
   }
