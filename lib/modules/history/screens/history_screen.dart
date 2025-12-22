@@ -43,17 +43,18 @@ class HistoryScreen extends StatelessWidget {
     final omitidos = historyData.length - tomados;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF2E5C8A),
+        foregroundColor: const Color(0xFF1E3A5F),
         elevation: 0,
         centerTitle: true,
         title: const Text(
           "Mi Historial",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 22,
+            fontSize: 26,
+            letterSpacing: 0.3,
           ),
         ),
         bottom: PreferredSize(
@@ -71,10 +72,10 @@ class HistoryScreen extends StatelessWidget {
   Widget _buildList(int tomados, int omitidos) {
     return Column(
       children: [
-        // RESUMEN COMPACTO
+        // RESUMEN MÁS GRANDE Y CLARO
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.blue.shade50, Colors.white],
@@ -87,27 +88,28 @@ class HistoryScreen extends StatelessWidget {
               const Text(
                 "Tu seguimiento",
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF2E5C8A),
+                  color: Color(0xFF1E3A5F),
+                  letterSpacing: 0.3,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 18),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _statBadge(
                     icon: Icons.check_circle_rounded,
                     count: tomados,
-                    label: "OK",
-                    color: Colors.green,
+                    label: "Tomados",
+                    color: const Color(0xFF10B981),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 20),
                   _statBadge(
                     icon: Icons.cancel_rounded,
                     count: omitidos,
-                    label: "NO",
-                    color: Colors.red,
+                    label: "Omitidos",
+                    color: const Color(0xFFEF4444),
                   ),
                 ],
               ),
@@ -115,10 +117,10 @@ class HistoryScreen extends StatelessWidget {
           ),
         ),
 
-        // LISTA
+        // LISTA CON ESPACIADO GENEROSO
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.all(20),
             itemCount: historyData.length,
             itemBuilder: (context, index) {
               return _historyCard(historyData[index]);
@@ -136,41 +138,44 @@ class HistoryScreen extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(14),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 2,
+          color: color,
+          width: 3,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                count.toString(),
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  height: 1,
-                ),
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-            ],
+          Icon(icon, color: color, size: 40),
+          const SizedBox(height: 8),
+          Text(
+            count.toString(),
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              color: color,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.3,
+            ),
           ),
         ],
       ),
@@ -179,27 +184,22 @@ class HistoryScreen extends StatelessWidget {
 
   Widget _historyCard(Map<String, dynamic> item) {
     final bool tomado = item['tomado'] ?? false;
+    final Color mainColor = tomado ? const Color(0xFF10B981) : const Color(0xFFEF4444);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: tomado
-              ? [Colors.white, Colors.green.shade50.withOpacity(0.3)]
-              : [Colors.white, Colors.red.shade50.withOpacity(0.3)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: tomado ? Colors.green.shade200 : Colors.red.shade200,
-          width: 2,
+          color: mainColor.withOpacity(0.3),
+          width: 2.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: (tomado ? Colors.green : Colors.red).withOpacity(0.12),
-            blurRadius: 10,
+            color: mainColor.withOpacity(0.08),
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
@@ -208,34 +208,30 @@ class HistoryScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              // ÍCONO
+              // ÍCONO GRANDE Y CLARO
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: tomado
-                        ? [Colors.green.shade400, Colors.green.shade600]
-                        : [Colors.red.shade400, Colors.red.shade600],
-                  ),
+                  color: mainColor,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: (tomado ? Colors.green : Colors.red).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+                      color: mainColor.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Icon(
                   tomado ? Icons.check_rounded : Icons.close_rounded,
                   color: Colors.white,
-                  size: 24,
+                  size: 36,
                 ),
               ),
 
-              const SizedBox(width: 14),
+              const SizedBox(width: 18),
 
-              // NOMBRE
+              // NOMBRE DEL MEDICAMENTO MÁS GRANDE
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,80 +239,100 @@ class HistoryScreen extends StatelessWidget {
                     Text(
                       item['medicamento'],
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF2E5C8A),
+                        color: Color(0xFF1E3A5F),
+                        letterSpacing: 0.2,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
                       item['fecha'],
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 17,
                         color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
-                ),
-              ),
-
-              // BADGE
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: tomado ? Colors.green : Colors.red,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (tomado ? Colors.green : Colors.red).withOpacity(0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  tomado ? "✓" : "✗",
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-          // HORA
+          // HORA MÁS PROMINENTE
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFFFBBF24).withOpacity(0.15),
+                  const Color(0xFFF59E0B).withOpacity(0.08),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.orange.shade200,
-                width: 1.5,
+                color: const Color(0xFFF59E0B),
+                width: 2,
               ),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.access_time_rounded,
-                  size: 18,
-                  color: Colors.orange.shade700,
+                  size: 28,
+                  color: Color(0xFFD97706),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Text(
                   item['hora'],
-                  style: TextStyle(
-                    fontSize: 16,
+                  style: const TextStyle(
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange.shade800,
+                    color: Color(0xFFD97706),
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // ESTADO MÁS CLARO
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: mainColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: mainColor.withOpacity(0.4),
+                width: 2,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  tomado ? Icons.check_circle : Icons.cancel,
+                  color: mainColor,
+                  size: 24,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  tomado ? "MEDICAMENTO TOMADO" : "NO SE TOMÓ",
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    color: mainColor,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
@@ -335,7 +351,7 @@ class HistoryScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(40),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Colors.blue.shade100, Colors.blue.shade50],
@@ -344,33 +360,35 @@ class HistoryScreen extends StatelessWidget {
                 boxShadow: [
                   BoxShadow(
                     color: Colors.blue.shade200.withOpacity(0.5),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   )
                 ],
               ),
               child: const Icon(
                 Icons.history_outlined,
-                size: 80,
-                color: Color(0xFF2E5C8A),
+                size: 100,
+                color: Color(0xFF1E3A5F),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             const Text(
               "Sin historial aún",
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2E5C8A),
+                color: Color(0xFF1E3A5F),
+                letterSpacing: 0.3,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               "Aquí verás el registro de\ntus medicamentos",
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 20,
                 color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,

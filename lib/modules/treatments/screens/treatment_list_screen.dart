@@ -38,12 +38,12 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           "Mis Medicamentos",
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            fontSize: 22,
+            fontSize: 26,
             letterSpacing: 0.3,
           ),
         ),
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF5B7C99),
+        foregroundColor: const Color(0xFF1E3A5F),
         centerTitle: true,
         elevation: 0,
         bottom: PreferredSize(
@@ -62,10 +62,10 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   Widget _buildList(List<Map<String, dynamic>> data) {
     return Column(
       children: [
-        // SALUDO CÁLIDO
+        // SALUDO MÁS GRANDE Y CLARO
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -79,57 +79,57 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [
-                      const Color(0xFF81C784),
-                      const Color(0xFF66BB6A),
+                      Color(0xFF66BB6A),
+                      Color(0xFF4CAF50),
                     ],
                   ),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF81C784).withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                      color: const Color(0xFF66BB6A).withOpacity(0.4),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
                 child: const Icon(
                   Icons.favorite_rounded,
-                  size: 32,
+                  size: 44,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               const Text(
                 "¡Tu salud, nuestra prioridad!",
                 style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF5B7C99),
-                  letterSpacing: 0.2,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1E3A5F),
+                  letterSpacing: 0.3,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Text(
                 "${data.length} ${data.length == 1 ? 'medicamento' : 'medicamentos'} para hoy",
                 style: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF7A8E9E),
-                  fontWeight: FontWeight.w500,
+                  fontSize: 19,
+                  color: Color(0xFF5B7C99),
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
         ),
 
-        // LISTA
+        // LISTA CON MÁS ESPACIADO
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             itemCount: data.length,
             itemBuilder: (context, index) {
               return _treatmentCard(data[index], index);
@@ -144,171 +144,179 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     return GestureDetector(
       onTap: () => _showOptions(treatment, index),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
+        margin: const EdgeInsets.only(bottom: 18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFFE0E7ED),
-            width: 1.5,
+            color: const Color(0xFF42A5F5),
+            width: 2.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF5B7C99).withOpacity(0.08),
-              blurRadius: 12,
+              color: const Color(0xFF42A5F5).withOpacity(0.12),
+              blurRadius: 16,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           child: InkWell(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
             onTap: () => _showOptions(treatment, index),
             child: Padding(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // HEADER
+                  // HEADER CON NOMBRE MÁS GRANDE
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [
-                              Color(0xFF64B5F6),
                               Color(0xFF42A5F5),
+                              Color(0xFF1E88E5),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
                               color: const Color(0xFF42A5F5).withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
                         child: const Icon(
                           Icons.medication_rounded,
-                          size: 28,
+                          size: 36,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 18),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // ✅ NOMBRE MUCHO MÁS GRANDE
                             Text(
                               treatment['name'],
                               style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF5B7C99),
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF1E3A5F),
                                 letterSpacing: 0.2,
+                                height: 1.2,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 6),
+                            // ✅ DOSIS MÁS GRANDE Y NEGRA
                             Text(
                               treatment['dosis'],
                               style: const TextStyle(
-                                fontSize: 15,
-                                color: Color(0xFF8A9BAD),
-                                fontWeight: FontWeight.w500,
+                                fontSize: 19,
+                                color: Color(0xFF1E3A5F),
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Icon(
+                      const Icon(
                         Icons.chevron_right_rounded,
-                        color: const Color(0xFFB0BEC5),
-                        size: 28,
+                        color: Color(0xFF90A4AE),
+                        size: 32,
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
-                  // HORA
+                  // ✅ HORA MÁS GRANDE Y PROMINENTE
                   Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
+                      horizontal: 20,
+                      vertical: 14,
                     ),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [
-                          Color(0xFFFFB74D),
                           Color(0xFFFFA726),
+                          Color(0xFFF57C00),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(18),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFFB74D).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+                          color: const Color(0xFFFFA726).withOpacity(0.35),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
                           Icons.access_time_rounded,
                           color: Colors.white,
-                          size: 22,
+                          size: 32,
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 14),
                         Text(
                           treatment['hora'],
                           style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
                             color: Colors.white,
-                            letterSpacing: -0.3,
+                            letterSpacing: -0.5,
                           ),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                  // FRECUENCIA
+                  // ✅ FRECUENCIA MÁS GRANDE
                   Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
+                      horizontal: 18,
+                      vertical: 12,
                     ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE3F2FD),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: const Color(0xFFBBDEFB),
-                        width: 1,
+                        color: const Color(0xFF42A5F5),
+                        width: 2,
                       ),
                     ),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
                           Icons.repeat_rounded,
-                          size: 20,
-                          color: Color(0xFF42A5F5),
+                          size: 26,
+                          color: Color(0xFF1E88E5),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         Text(
                           treatment['frecuencia'],
                           style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF1976D2),
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1565C0),
+                            letterSpacing: 0.2,
                           ),
                         ),
                       ],
@@ -331,7 +339,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(36),
+              padding: const EdgeInsets.all(44),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [
@@ -343,33 +351,35 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF64B5F6).withOpacity(0.3),
-                    blurRadius: 20,
+                    blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
                 ],
               ),
               child: const Icon(
                 Icons.medical_services_rounded,
-                size: 80,
+                size: 100,
                 color: Color(0xFF42A5F5),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             const Text(
               "¡Vamos a empezar!",
               style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF5B7C99),
+                fontSize: 30,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF1E3A5F),
+                letterSpacing: 0.3,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             const Text(
               "Agrega tu primer medicamento\npara comenzar tu seguimiento",
               style: TextStyle(
-                fontSize: 17,
-                color: Color(0xFF8A9BAD),
+                fontSize: 20,
+                color: Color(0xFF5B7C99),
+                fontWeight: FontWeight.w600,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -384,16 +394,16 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     return FloatingActionButton.extended(
       backgroundColor: const Color(0xFF66BB6A),
       onPressed: _addTreatment,
-      icon: const Icon(Icons.add_rounded, size: 28),
+      icon: const Icon(Icons.add_rounded, size: 32),
       label: const Text(
         "Agregar",
         style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
+          fontSize: 20,
+          fontWeight: FontWeight.w900,
           letterSpacing: 0.3,
         ),
       ),
-      elevation: 6,
+      elevation: 8,
     );
   }
 
@@ -404,39 +414,41 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
       builder: (context) => Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 4,
+              width: 50,
+              height: 5,
               decoration: BoxDecoration(
                 color: const Color(0xFFE0E7ED),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(3),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+            // ✅ NOMBRE MÁS GRANDE EN EL MODAL
             Text(
               treatment['name'],
               style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF5B7C99),
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF1E3A5F),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               "${treatment['dosis']} • ${treatment['hora']}",
               style: const TextStyle(
-                fontSize: 16,
-                color: Color(0xFF8A9BAD),
+                fontSize: 19,
+                color: Color(0xFF5B7C99),
+                fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
             _optionButton(
               icon: Icons.edit_rounded,
               label: "Editar",
@@ -446,7 +458,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                 _editTreatment(treatment);
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             _optionButton(
               icon: Icons.delete_rounded,
               label: "Eliminar",
@@ -456,14 +468,14 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                 _confirmDelete(treatment, index);
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             _optionButton(
               icon: Icons.close_rounded,
               label: "Cancelar",
               color: const Color(0xFF90A4AE),
               onTap: () => Navigator.pop(context),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
           ],
         ),
       ),
@@ -478,23 +490,24 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: 64,
       child: ElevatedButton.icon(
         onPressed: onTap,
-        icon: Icon(icon, size: 24),
+        icon: Icon(icon, size: 28),
         label: Text(
           label,
           style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
           ),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          elevation: 0,
+          elevation: 4,
+          shadowColor: color.withOpacity(0.4),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
           ),
         ),
       ),
@@ -511,7 +524,10 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   void _editTreatment(Map<String, dynamic> treatment) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Editando ${treatment['name']}"),
+        content: Text(
+          "Editando ${treatment['name']}",
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        ),
         backgroundColor: const Color(0xFF42A5F5),
         behavior: SnackBarBehavior.floating,
       ),
@@ -522,21 +538,39 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.all(28),
         title: const Text(
           "¿Eliminar?",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF1E3A5F),
+          ),
+          textAlign: TextAlign.center,
         ),
         content: Text(
           "¿Seguro que quieres eliminar ${treatment['name']}?",
-          style: const TextStyle(fontSize: 17),
+          style: const TextStyle(
+            fontSize: 19,
+            color: Color(0xFF5B7C99),
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            ),
             child: const Text(
               "No",
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF90A4AE),
+              ),
             ),
           ),
           TextButton(
@@ -544,10 +578,16 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               Navigator.pop(context);
               _deleteTreatment(index);
             },
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF5350)),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFEF5350),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            ),
             child: const Text(
               "Sí, eliminar",
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
@@ -563,7 +603,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
       SnackBar(
         content: Text(
           "${deleted['name']} eliminado",
-          style: const TextStyle(fontSize: 16),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         backgroundColor: const Color(0xFF66BB6A),
         action: SnackBarAction(
