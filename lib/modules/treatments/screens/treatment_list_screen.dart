@@ -62,10 +62,10 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   Widget _buildList(List<Map<String, dynamic>> data) {
     return Column(
       children: [
-        // SALUDO MÁS GRANDE Y CLARO
+        // HEADER COMPACTO
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -76,10 +76,11 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               end: Alignment.bottomCenter,
             ),
           ),
-          child: Column(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
@@ -90,43 +91,47 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF66BB6A).withOpacity(0.4),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+                      color: const Color(0xFF66BB6A).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
                 child: const Icon(
                   Icons.favorite_rounded,
-                  size: 44,
+                  size: 24,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
-                "¡Tu salud, nuestra prioridad!",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1E3A5F),
-                  letterSpacing: 0.3,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "${data.length} ${data.length == 1 ? 'medicamento' : 'medicamentos'} para hoy",
-                style: const TextStyle(
-                  fontSize: 19,
-                  color: Color(0xFF5B7C99),
-                  fontWeight: FontWeight.w700,
-                ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "¡Tu salud, nuestra prioridad!",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1E3A5F),
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    "${data.length} ${data.length == 1 ? 'medicamento' : 'medicamentos'} para hoy",
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Color(0xFF5B7C99),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
 
-        // LISTA CON MÁS ESPACIADO
+        // LISTA CON MÁS ESPACIO
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),

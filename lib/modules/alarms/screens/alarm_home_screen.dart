@@ -43,13 +43,13 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
       backgroundColor: const Color(0xFFF8FAFB),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF5B7C99),
+        foregroundColor: const Color(0xFF1E3A5F),
         centerTitle: true,
         elevation: 0,
         title: const Text(
           "Mi Alarma",
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 26,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.3,
           ),
@@ -65,10 +65,10 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
       body: SafeArea(
         child: Column(
           children: [
-            // HEADER CÁLIDO
+            // HEADER MÁS GRANDE Y CLARO
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: taken
@@ -81,37 +81,37 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: taken
-                            ? [const Color(0xFF81C784), const Color(0xFF66BB6A)]
-                            : [const Color(0xFFFFB74D), const Color(0xFFFFA726)],
+                            ? [const Color(0xFF66BB6A), const Color(0xFF4CAF50)]
+                            : [const Color(0xFFFFA726), const Color(0xFFF57C00)],
                       ),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: (taken ? const Color(0xFF81C784) : const Color(0xFFFFB74D))
+                          color: (taken ? const Color(0xFF66BB6A) : const Color(0xFFFFA726))
                               .withOpacity(0.4),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
                     child: Icon(
                       taken ? Icons.check_circle_rounded : Icons.schedule_rounded,
-                      size: 28,
+                      size: 44,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 14),
                   Text(
                     taken ? "¡Excelente trabajo!" : "Es hora de cuidarte",
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
                       color: taken ? const Color(0xFF388E3C) : const Color(0xFFEF6C00),
-                      letterSpacing: 0.2,
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ],
@@ -122,7 +122,7 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                   child: _alarmCard(),
                 ),
               ),
@@ -136,22 +136,22 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
   Widget _alarmCard() {
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 400),
-      padding: const EdgeInsets.all(26),
+      constraints: const BoxConstraints(maxWidth: 420),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: taken
-              ? const Color(0xFFC8E6C9)
-              : const Color(0xFFFFE0B2),
-          width: 2,
+              ? const Color(0xFF66BB6A)
+              : const Color(0xFFFFA726),
+          width: 3,
         ),
         boxShadow: [
           BoxShadow(
-            color: (taken ? const Color(0xFF81C784) : const Color(0xFFFFB74D))
-                .withOpacity(0.15),
-            blurRadius: 20,
+            color: (taken ? const Color(0xFF66BB6A) : const Color(0xFFFFA726))
+                .withOpacity(0.2),
+            blurRadius: 24,
             offset: const Offset(0, 8),
           ),
         ],
@@ -159,84 +159,85 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ÍCONO MEDICAMENTO
+          // ÍCONO MEDICAMENTO MÁS GRANDE
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: taken
-                    ? [const Color(0xFF81C784), const Color(0xFF66BB6A)]
-                    : [const Color(0xFFFFB74D), const Color(0xFFFFA726)],
+                    ? [const Color(0xFF66BB6A), const Color(0xFF4CAF50)]
+                    : [const Color(0xFFFFA726), const Color(0xFFF57C00)],
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: (taken ? const Color(0xFF81C784) : const Color(0xFFFFB74D))
+                  color: (taken ? const Color(0xFF66BB6A) : const Color(0xFFFFA726))
                       .withOpacity(0.4),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
             child: const Icon(
               Icons.medication_rounded,
-              size: 52,
+              size: 72,
               color: Colors.white,
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
 
-          // HORA GRANDE
+          // ✅ HORA GIGANTE Y MUY VISIBLE
           Text(
             alarmTime,
             style: TextStyle(
-              fontSize: 64,
-              fontWeight: FontWeight.bold,
+              fontSize: 80,
+              fontWeight: FontWeight.w900,
               color: taken ? const Color(0xFF66BB6A) : const Color(0xFFFFA726),
               letterSpacing: -2,
               height: 1,
             ),
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 24),
 
-          // MEDICAMENTO
+          // ✅ MEDICAMENTO MÁS GRANDE
           Text(
             medication,
             style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF5B7C99),
-              letterSpacing: 0.2,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1E3A5F),
+              letterSpacing: 0.3,
             ),
             textAlign: TextAlign.center,
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-          // DOSIS
+          // ✅ DOSIS MÁS GRANDE Y CLARA
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
             decoration: BoxDecoration(
               color: const Color(0xFFF5F7FA),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: const Color(0xFFE0E7ED),
-                width: 1.5,
+                color: const Color(0xFF1E3A5F),
+                width: 2,
               ),
             ),
             child: Text(
               dosage,
               style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF5B7C99),
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1E3A5F),
+                letterSpacing: 0.2,
               ),
             ),
           ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 36),
 
           // BOTÓN O CONFIRMACIÓN
           if (!taken)
@@ -251,39 +252,39 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
   Widget _buildActionButton() {
     return Column(
       children: [
-        // BOTÓN PRINCIPAL
+        // ✅ BOTÓN PRINCIPAL MÁS GRANDE
         SizedBox(
           width: double.infinity,
-          height: 64,
+          height: 72,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF66BB6A),
-              elevation: 4,
-              shadowColor: const Color(0xFF81C784).withOpacity(0.5),
+              elevation: 8,
+              shadowColor: const Color(0xFF66BB6A).withOpacity(0.5),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
             onPressed: isProcessing ? null : _markAsTaken,
             child: isProcessing
                 ? const SizedBox(
-              width: 28,
-              height: 28,
+              width: 32,
+              height: 32,
               child: CircularProgressIndicator(
                 color: Colors.white,
-                strokeWidth: 3,
+                strokeWidth: 4,
               ),
             )
                 : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Icon(Icons.check_circle_rounded, size: 32),
-                SizedBox(width: 14),
+                Icon(Icons.check_circle_rounded, size: 40),
+                SizedBox(width: 16),
                 Text(
                   "YA LA TOMÉ",
                   style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -292,31 +293,31 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
-        // BOTÓN SECUNDARIO
+        // ✅ BOTÓN SECUNDARIO MÁS GRANDE
         SizedBox(
           width: double.infinity,
-          height: 52,
+          height: 60,
           child: OutlinedButton(
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF7A8E9E),
-              side: const BorderSide(color: Color(0xFFE0E7ED), width: 2),
+              foregroundColor: const Color(0xFF5B7C99),
+              side: const BorderSide(color: Color(0xFF5B7C99), width: 2.5),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(18),
               ),
             ),
             onPressed: isProcessing ? null : _postponeAlarm,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Icon(Icons.access_time_rounded, size: 24),
-                SizedBox(width: 10),
+                Icon(Icons.access_time_rounded, size: 28),
+                SizedBox(width: 12),
                 Text(
                   "Recordar después",
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
@@ -333,40 +334,47 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
               ),
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFF81C784),
-                width: 3,
+                color: const Color(0xFF66BB6A),
+                width: 4,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF66BB6A).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: const Icon(
               Icons.check_circle_rounded,
-              size: 64,
+              size: 80,
               color: Color(0xFF66BB6A),
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 24),
           const Text(
             "¡Muy bien hecho!",
             style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
               color: Color(0xFF66BB6A),
-              letterSpacing: 0.2,
+              letterSpacing: 0.3,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           const Text(
             "Tu salud es lo primero",
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF81C784),
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF4CAF50),
             ),
           ),
         ],
@@ -392,12 +400,12 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
       SnackBar(
         content: Row(
           children: const [
-            Icon(Icons.check_circle, color: Colors.white, size: 26),
-            SizedBox(width: 14),
+            Icon(Icons.check_circle, color: Colors.white, size: 32),
+            SizedBox(width: 16),
             Expanded(
               child: Text(
                 "¡Excelente! Sigue así",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
               ),
             ),
           ],
@@ -405,8 +413,9 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
         backgroundColor: const Color(0xFF66BB6A),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
     );
   }
@@ -415,38 +424,81 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        contentPadding: const EdgeInsets.all(32),
         title: const Text(
           "¿Cuánto tiempo?",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF1E3A5F),
+          ),
+          textAlign: TextAlign.center,
         ),
         content: const Text(
           "¿En cuánto tiempo quieres que te recordemos?",
-          style: TextStyle(fontSize: 17),
+          style: TextStyle(
+            fontSize: 20,
+            color: Color(0xFF5B7C99),
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
         ),
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar", style: TextStyle(fontSize: 17)),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            ),
+            child: const Text(
+              "Cancelar",
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF90A4AE),
+              ),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _postponeFor(10);
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFA726),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
             child: const Text(
               "10 minutos",
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _postponeFor(30);
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFA726),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
             child: const Text(
               "30 minutos",
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
@@ -459,12 +511,15 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.schedule, color: Colors.white, size: 26),
-            const SizedBox(width: 14),
+            const Icon(Icons.schedule, color: Colors.white, size: 32),
+            const SizedBox(width: 16),
             Expanded(
               child: Text(
                 "Te recordaremos en $minutes minutos",
-                style: const TextStyle(fontSize: 16),
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],
@@ -472,8 +527,9 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen> with SingleTickerProv
         backgroundColor: const Color(0xFFFFA726),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
     );
   }
