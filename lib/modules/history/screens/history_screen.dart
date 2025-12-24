@@ -72,10 +72,10 @@ class HistoryScreen extends StatelessWidget {
   Widget _buildList(int tomados, int omitidos) {
     return Column(
       children: [
-        // RESUMEN MÁS GRANDE Y CLARO
+        // RESUMEN COMPACTO HORIZONTAL
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.blue.shade50, Colors.white],
@@ -83,35 +83,20 @@ class HistoryScreen extends StatelessWidget {
               end: Alignment.bottomCenter,
             ),
           ),
-          child: Column(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              const Text(
-                "Tu seguimiento",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E3A5F),
-                  letterSpacing: 0.3,
-                ),
+              _statBadgeCompact(
+                icon: Icons.check_circle_rounded,
+                count: tomados,
+                label: "Tomados",
+                color: const Color(0xFF10B981),
               ),
-              const SizedBox(height: 18),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _statBadge(
-                    icon: Icons.check_circle_rounded,
-                    count: tomados,
-                    label: "Tomados",
-                    color: const Color(0xFF10B981),
-                  ),
-                  const SizedBox(width: 20),
-                  _statBadge(
-                    icon: Icons.cancel_rounded,
-                    count: omitidos,
-                    label: "Omitidos",
-                    color: const Color(0xFFEF4444),
-                  ),
-                ],
+              _statBadgeCompact(
+                icon: Icons.cancel_rounded,
+                count: omitidos,
+                label: "Omitidos",
+                color: const Color(0xFFEF4444),
               ),
             ],
           ),
@@ -131,51 +116,58 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _statBadge({
+  Widget _statBadgeCompact({
     required IconData icon,
     required int count,
     required String label,
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: color,
-          width: 3,
+          width: 2.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: color.withOpacity(0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Column(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 40),
-          const SizedBox(height: 8),
-          Text(
-            count.toString(),
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
-              color: color,
-              height: 1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: color,
-              letterSpacing: 0.3,
-            ),
+          Icon(icon, color: color, size: 28),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
           ),
         ],
       ),
