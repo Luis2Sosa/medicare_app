@@ -27,172 +27,246 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFB),
       resizeToAvoidBottomInset: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.mainGradient,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1E3A5F),
+        centerTitle: true,
+        elevation: 0,
+        title: const Text(
+          "Agregar Medicamento",
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
+          ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22),
-            child: Column(
-              children: [
-                // 👉 FORMULARIO (SCROLL)
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const SizedBox(height: 10),
-
-                          Image.asset(
-                            "assets/images/medicare_logo.png",
-                            width: 160,
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          const Text(
-                            "Registrar tratamiento",
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryBlue,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 22),
+          onPressed: () => Navigator.pop(context),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: const Color(0xFFE8EEF2),
+            height: 1,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // FORMULARIO CON SCROLL
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // HEADER COMPACTO
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF42A5F5),
+                                Color(0xFF1E88E5),
+                              ],
                             ),
-                          ),
-
-                          const SizedBox(height: 6),
-
-                          const Text(
-                            "Añade tus medicamentos fácilmente",
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.black54,
-                            ),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          _label("Nombre del medicamento"),
-                          _inputCard(
-                            child: TextFormField(
-                              controller: nameCtrl,
-                              style: const TextStyle(fontSize: 18),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                hintText: "Ej: Amoxicilina",
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF42A5F5).withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return "Por favor ingresa el nombre del medicamento";
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-
-                          const SizedBox(height: 25),
-
-                          _label("Dosis"),
-                          _segmentSelector(
-                            items: ["1 tableta", "2 tabletas", "Media tableta"],
-                            selected: dosis,
-                            onSelect: (v) => setState(() => dosis = v),
-                          ),
-
-                          const SizedBox(height: 25),
-
-                          _label("Frecuencia"),
-                          _segmentSelector(
-                            items: [
-                              "Cada 8 horas",
-                              "Cada 12 horas",
-                              "Cada 24 horas",
                             ],
-                            selected: frecuencia,
-                            onSelect: (v) => setState(() => frecuencia = v),
                           ),
+                          child: const Icon(
+                            Icons.medication_rounded,
+                            size: 40,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
 
-                          const SizedBox(height: 25),
+                      const SizedBox(height: 16),
 
-                          _label("Hora de alarma"),
-                          _inputCard(
-                            child: GestureDetector(
-                              onTap: _pickTime,
-                              child: Container(
-                                padding:
-                                const EdgeInsets.symmetric(vertical: 14),
-                                child: Row(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      selectedTime == null
-                                          ? "Seleccionar hora"
-                                          : "${selectedTime!.hour}:${selectedTime!.minute.toString().padLeft(2, '0')}",
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: selectedTime == null
-                                            ? Colors.grey
-                                            : Colors.black87,
-                                      ),
-                                    ),
-                                    const Icon(Icons.access_time,
-                                        color: AppTheme.primaryBlue),
-                                  ],
-                                ),
-                              ),
+                      const Center(
+                        child: Text(
+                          "Completa los datos",
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Color(0xFF5B7C99),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // NOMBRE DEL MEDICAMENTO
+                      _label("Nombre del medicamento"),
+                      const SizedBox(height: 10),
+                      _inputCard(
+                        child: TextFormField(
+                          controller: nameCtrl,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1E3A5F),
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: "Ej: Amoxicilina",
+                            hintStyle: TextStyle(
+                              fontSize: 20,
+                              color: Color(0xFFB0BEC5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 4,
                             ),
                           ),
-
-                          const SizedBox(height: 120),
-                        ],
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "Ingresa el nombre del medicamento";
+                            }
+                            return null;
+                          },
+                        ),
                       ),
-                    ),
+
+                      const SizedBox(height: 28),
+
+                      // DOSIS
+                      _label("¿Cuánto tomar?"),
+                      const SizedBox(height: 12),
+                      _segmentSelector(
+                        items: ["1 tableta", "2 tabletas", "Media"],
+                        selected: dosis,
+                        onSelect: (v) => setState(() => dosis = v),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // FRECUENCIA
+                      _label("¿Cada cuánto?"),
+                      const SizedBox(height: 12),
+                      _segmentSelector(
+                        items: [
+                          "Cada 8 horas",
+                          "Cada 12 horas",
+                          "Cada 24 horas",
+                        ],
+                        selected: frecuencia,
+                        onSelect: (v) => setState(() => frecuencia = v),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // HORA DE ALARMA
+                      _label("¿A qué hora?"),
+                      const SizedBox(height: 10),
+                      _inputCard(
+                        child: InkWell(
+                          onTap: _pickTime,
+                          borderRadius: BorderRadius.circular(18),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 18,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  selectedTime == null
+                                      ? "Seleccionar hora"
+                                      : _formatTime(selectedTime!),
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                    color: selectedTime == null
+                                        ? const Color(0xFFB0BEC5)
+                                        : const Color(0xFF1E3A5F),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFA726),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.access_time_rounded,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 80),
+                    ],
                   ),
                 ),
-
-                // 👉 BOTÓN FIJO
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _saveButton(),
-                ),
-              ],
+              ),
             ),
-          ),
+
+            // BOTÓN FIJO GRANDE
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              child: _saveButton(),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+    return '$hour:$minute $period';
+  }
+
   Widget _label(String text) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 20,
-          color: AppTheme.primaryBlue,
-          fontWeight: FontWeight.bold,
-        ),
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 22,
+        color: Color(0xFF1E3A5F),
+        fontWeight: FontWeight.w900,
+        letterSpacing: 0.2,
       ),
     );
   }
 
   Widget _inputCard({required Widget child}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF42A5F5).withOpacity(0.3),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: const Color(0xFF42A5F5).withOpacity(0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           )
@@ -207,37 +281,55 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
     required String selected,
     required Function(String) onSelect,
   }) {
-    return Row(
+    return Column(
       children: items.map((e) {
         final isSelected = e == selected;
-        return Expanded(
-          child: GestureDetector(
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: InkWell(
             onTap: () => onSelect(e),
+            borderRadius: BorderRadius.circular(18),
             child: Container(
-              height: 50,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 18),
               decoration: BoxDecoration(
-                color: isSelected ? AppTheme.primaryBlue : Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppTheme.primaryBlue, width: 1.8),
+                color: isSelected ? const Color(0xFF42A5F5) : Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: const Color(0xFF42A5F5),
+                  width: isSelected ? 3 : 2,
+                ),
                 boxShadow: [
                   if (isSelected)
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 10,
+                      color: const Color(0xFF42A5F5).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     )
                 ],
               ),
-              child: Center(
-                child: Text(
-                  e,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: isSelected ? Colors.white : AppTheme.primaryBlue,
-                    fontWeight:
-                    isSelected ? FontWeight.bold : FontWeight.w600,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (isSelected)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 10),
+                      child: Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                  Text(
+                    e,
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: isSelected ? Colors.white : const Color(0xFF42A5F5),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.2,
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -250,6 +342,24 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            timePickerTheme: TimePickerThemeData(
+              // Aumentar tamaño de texto en el picker
+              hourMinuteTextStyle: const TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.w900,
+              ),
+              helpTextStyle: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (time != null) {
@@ -258,96 +368,105 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
   }
 
   void _saveTreatment() async {
-    // Validar formulario
     if (!_formKey.currentState!.validate()) {
-      _showSnackBar("Por favor completa todos los campos", isError: true);
+      _showSnackBar("Completa todos los campos", isError: true);
       return;
     }
 
-    // Validar hora seleccionada
     if (selectedTime == null) {
-      _showSnackBar("Por favor selecciona una hora de alarma", isError: true);
+      _showSnackBar("Selecciona una hora de alarma", isError: true);
       return;
     }
 
     setState(() => isLoading = true);
 
-    // Simular guardado (aquí irían tus servicios de guardado real)
     await Future.delayed(const Duration(milliseconds: 800));
-
-    // TODO: Aquí guardarías los datos:
-    // final treatment = Treatment(
-    //   name: nameCtrl.text.trim(),
-    //   dosis: dosis,
-    //   frecuencia: frecuencia,
-    //   alarmTime: selectedTime!,
-    // );
-    // await TreatmentService.save(treatment);
 
     if (!mounted) return;
 
     setState(() => isLoading = false);
 
-    _showSnackBar("¡Tratamiento guardado exitosamente!", isError: false);
+    _showSnackBar("¡Medicamento guardado!", isError: false);
 
-    // Navegar después de 1 segundo
     await Future.delayed(const Duration(seconds: 1));
 
     if (!mounted) return;
 
-    Navigator.pushReplacementNamed(context, "/home");
+    Navigator.pop(context);
   }
 
   void _showSnackBar(String message, {required bool isError}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
+        content: Row(
+          children: [
+            Icon(
+              isError ? Icons.error_outline : Icons.check_circle,
+              color: Colors.white,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: isError ? const Color(0xFFEF5350) : const Color(0xFF66BB6A),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        margin: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
     );
   }
 
   Widget _saveButton() {
-    return GestureDetector(
-      onTap: isLoading ? null : _saveTreatment,
-      child: Container(
-        height: 58,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isLoading
-                ? [Colors.grey, Colors.grey.shade400]
-                : [const Color(0xFF1F4BAE), const Color(0xFF2A60D4)],
+    return SizedBox(
+      width: double.infinity,
+      height: 68,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF66BB6A),
+          elevation: 8,
+          shadowColor: const Color(0xFF66BB6A).withOpacity(0.4),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
+          disabledBackgroundColor: Colors.grey,
         ),
-        child: Center(
-          child: isLoading
-              ? const SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              color: Colors.white,
-              strokeWidth: 3,
-            ),
-          )
-              : const Text(
-            "Guardar",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+        onPressed: isLoading ? null : _saveTreatment,
+        child: isLoading
+            ? const SizedBox(
+          width: 32,
+          height: 32,
+          child: CircularProgressIndicator(
+            color: Colors.white,
+            strokeWidth: 4,
           ),
+        )
+            : Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.save_rounded, size: 32),
+            SizedBox(width: 14),
+            Text(
+              "Guardar Medicamento",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
         ),
       ),
     );
