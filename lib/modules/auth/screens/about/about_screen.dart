@@ -37,60 +37,8 @@ class AboutScreen extends StatelessWidget {
         padding: const EdgeInsets.all(28),
         child: Column(
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 0),
 
-            // MENSAJE PRINCIPAL GRANDE
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF3B82F6),
-                    Color(0xFF2563EB),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF3B82F6).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.favorite_rounded,
-                    size: 64,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "MediCare",
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Te ayudamos a recordar tus medicamentos para cuidar tu salud",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
 
             // LO QUE HACE LA APP
             const Text(
