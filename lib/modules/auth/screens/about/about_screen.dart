@@ -32,6 +32,8 @@ class AboutScreen extends StatelessWidget {
             _header(),
             const SizedBox(height: 36),
 
+            // Acerca de
+
             _featureCard(
               icon: Icons.alarm_rounded,
               title: "Recordatorios inteligentes",
