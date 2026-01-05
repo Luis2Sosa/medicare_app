@@ -32,7 +32,7 @@ class AboutScreen extends StatelessWidget {
             _header(),
             const SizedBox(height: 36),
 
-            // Acerca de
+            // Acerca de lo que es el recordatorio.
 
             _featureCard(
               icon: Icons.alarm_rounded,
