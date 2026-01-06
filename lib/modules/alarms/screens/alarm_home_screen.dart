@@ -108,8 +108,8 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen>
   Widget _alarmCard() {
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 360), // 👈 MÁS PEQUEÑA
-      padding: const EdgeInsets.all(24), // 👈 MENOS PADDING
+      constraints: const BoxConstraints(maxWidth: 320), // 👈 MÁS PEQUEÑA
+      padding: const EdgeInsets.all(18), // 👈 MENOS PADDING
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
