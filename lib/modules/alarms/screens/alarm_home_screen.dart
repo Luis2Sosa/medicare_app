@@ -104,7 +104,7 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen>
     );
   }
 
-  // ───────────────── CARD CENTRAL ─────────────────
+  // ───────────────── CARD CENTRAL ALARMA ─────────────────
   Widget _alarmCard() {
     return Container(
       width: double.infinity,
