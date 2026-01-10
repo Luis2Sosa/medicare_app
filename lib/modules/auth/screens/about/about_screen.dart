@@ -1,7 +1,46 @@
 import 'package:flutter/material.dart';
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
+
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,43 +58,67 @@ class AboutScreen extends StatelessWidget {
         title: const Text(
           "Sobre MediCare",
           style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w900,
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
             color: Color(0xFF1E3A5F),
+            letterSpacing: 0.3,
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
-        child: Column(
-          children: [
-            _header(),
-            const SizedBox(height: 36),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
+            child: Column(
+              children: [
+                _header(),
+                const SizedBox(height: 40),
 
-            _featureCard(
-              icon: Icons.alarm_rounded,
-              title: "Alertas médicas automáticas",
-              desc: "Notificaciones precisas para que nunca olvides una dosis.",
-              color: const Color(0xFF3B82F6),
-            ),
-            _featureCard(
-              icon: Icons.verified_user_rounded,
-              title: "Control seguro de tratamientos",
-              desc: "Evita errores, sobredosis y riesgos innecesarios.",
-              color: const Color(0xFF10B981),
-            ),
-            _featureCard(
-              icon: Icons.event_note_rounded,
-              title: "Historial clínico personal",
-              desc: "Revisa tus tomas anteriores de forma clara y confiable.",
-              color: const Color(0xFFF59E0B),
-            ),
+                _featureCard(
+                  icon: Icons.notifications_active_rounded,
+                  title: "Recordatorios inteligentes",
+                  desc: "Notificaciones precisas y personalizadas para que nunca olvides una dosis importante.",
+                  color: const Color(0xFF3B82F6),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                  ),
+                ),
+                _featureCard(
+                  icon: Icons.shield_rounded,
+                  title: "Seguridad garantizada",
+                  desc: "Control preciso de tu tratamiento para evitar errores, sobredosis y riesgos innecesarios.",
+                  color: const Color(0xFF10B981),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF10B981), Color(0xFF059669)],
+                  ),
+                ),
+                _featureCard(
+                  icon: Icons.calendar_month_rounded,
+                  title: "Historial completo",
+                  desc: "Accede a tu registro médico personal de forma clara, organizada y siempre disponible.",
+                  color: const Color(0xFFF59E0B),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                  ),
+                ),
+                _featureCard(
+                  icon: Icons.analytics_rounded,
+                  title: "Estadísticas de adherencia",
+                  desc: "Visualiza tu progreso y mantén un seguimiento detallado de tu cumplimiento médico.",
+                  color: const Color(0xFF8B5CF6),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                  ),
+                ),
 
-            const SizedBox(height: 40),
-            _backButton(context),
-            const SizedBox(height: 28),
-            _footer(),
-          ],
+                const SizedBox(height: 48),
+                _backButton(context),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -63,35 +126,56 @@ class AboutScreen extends StatelessWidget {
 
   Widget _header() {
     return Container(
-      padding: const EdgeInsets.all(26),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF3B82F6), Color(0xFF1E40AF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF3B82F6).withOpacity(0.4),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Column(
-        children: const [
-          Icon(Icons.favorite_rounded, size: 64, color: Colors.white),
-          SizedBox(height: 16),
-          Text(
-            "Tu salud primero",
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w900,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.favorite_rounded,
+              size: 56,
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 24),
+          const Text(
+            "Tu salud es prioridad",
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 12),
           Text(
-            "MediCare protege tu tratamiento, evita errores y te acompaña cada día.",
+            "MediCare te acompaña cada día protegiendo tu tratamiento y brindándote tranquilidad.",
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 18,
-              height: 1.4,
-              color: Colors.white70,
+              fontSize: 17,
+              height: 1.5,
+              color: Colors.white.withOpacity(0.9),
+              letterSpacing: 0.2,
             ),
           ),
         ],
@@ -104,51 +188,85 @@ class AboutScreen extends StatelessWidget {
     required String title,
     required String desc,
     required Color color,
+    required Gradient gradient,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(.18),
-            blurRadius: 26,
-            offset: const Offset(0, 12),
+            color: color.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: color.withOpacity(.12),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Icon(icon, size: 36, color: color),
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(28),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(28),
+          onTap: () {},
+          splashColor: color.withOpacity(0.1),
+          highlightColor: color.withOpacity(0.05),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF1E3A5F))),
-                const SizedBox(height: 6),
-                Text(desc,
-                    style: const TextStyle(
-                        fontSize: 16,
-                        height: 1.4,
-                        color: Color(0xFF64748B))),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: gradient,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(icon, size: 32, color: Colors.white),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1E3A5F),
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        desc,
+                        style: TextStyle(
+                          fontSize: 15,
+                          height: 1.5,
+                          color: const Color(0xFF64748B).withOpacity(0.9),
+                          letterSpacing: 0.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-          )
-        ],
+          ),
+        ),
       ),
     );
   }
@@ -156,38 +274,56 @@ class AboutScreen extends StatelessWidget {
   Widget _backButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 70,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          elevation: 12,
-          backgroundColor: const Color(0xFF1D4ED8),
-          shadowColor: const Color(0xFF3B82F6),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
+      height: 64,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1D4ED8), Color(0xFF1E40AF)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF3B82F6).withOpacity(0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(32),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(32),
+            onTap: () => Navigator.pop(context),
+            splashColor: Colors.white.withOpacity(0.2),
+            highlightColor: Colors.white.withOpacity(0.1),
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(
+                    Icons.arrow_back_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    "Volver",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-        onPressed: () => Navigator.pop(context),
-        child: const Text(
-          "Volver",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-            letterSpacing: .5,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _footer() {
-    return const Text(
-      "Sosa Tech Lab — Health Software",
-      style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFF94A3B8),
-        letterSpacing: .4,
       ),
     );
   }
