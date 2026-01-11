@@ -209,7 +209,7 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen>
           ScaleTransition(
             scale: _pulseAnimation,
             child: Container(
-              padding: const EdgeInsets.all(22),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
@@ -227,7 +227,7 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen>
               ),
               child: const Icon(
                 Icons.medication_rounded,
-                size: 64,
+                size: 50,
                 color: Colors.white,
               ),
             ),
