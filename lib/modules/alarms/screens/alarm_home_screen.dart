@@ -205,7 +205,7 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ÍCONO CON ANIMACIÓN
+          // ÍCONO CON ANIMACIÓN PARA QUE SE VEA MEJOR
           ScaleTransition(
             scale: _pulseAnimation,
             child: Container(
