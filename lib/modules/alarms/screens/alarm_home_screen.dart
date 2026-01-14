@@ -39,7 +39,7 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen>
       curve: Curves.elasticOut,
     );
 
-    // Pulse para el ícono de medicamento
+    // Pulse para el ícono de medicamento.
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
