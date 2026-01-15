@@ -61,7 +61,7 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
 
                 // SLOGAN
                 Positioned(
-                  top: 360,
+                  top: 300,
                   left: 0,
                   right: 0,
                   child: Padding(
