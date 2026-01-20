@@ -46,7 +46,7 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
             opacity: _fadeAnimation,
             child: Stack(
               children: [
-                // LOGO
+                // LOGO PRINCIPAL INDEPENDIENTE
                 Positioned(
                   top: 60,
                   left: 0,
