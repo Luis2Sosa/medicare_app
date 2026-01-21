@@ -270,7 +270,7 @@ class _AlarmHomeScreenState extends State<AlarmHomeScreen>
 
           const SizedBox(height: 16),
 
-          // DOSIS
+          // DOSIS PARA LA APP
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             decoration: BoxDecoration(
