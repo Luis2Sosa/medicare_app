@@ -53,6 +53,7 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           color: const Color(0xFF1E3A5F),
+          tooltip: "Volver",
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -75,46 +76,46 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
             child: Column(
               children: [
                 _header(),
-                const SizedBox(height: 40),
+                const SizedBox(height: 36),
 
                 _featureCard(
                   icon: Icons.notifications_active_rounded,
-                  title: "Recordatorios inteligentes",
-                  desc: "Notificaciones precisas y personalizadas para que nunca olvides una dosis importante.",
+                  title: "Recordatorios claros",
+                  desc: "Te avisa con tiempo cuándo tomar cada medicamento, con avisos fáciles de ver y de entender.",
                   color: const Color(0xFF3B82F6),
                   gradient: const LinearGradient(
                     colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
                   ),
                 ),
                 _featureCard(
-                  icon: Icons.shield_rounded,
-                  title: "Seguridad garantizada",
-                  desc: "Control preciso de tu tratamiento para evitar errores, sobredosis y riesgos innecesarios.",
+                  icon: Icons.touch_app_rounded,
+                  title: "Fácil de usar",
+                  desc: "Botones grandes y pasos sencillos, pensados para que cualquier persona pueda usarla sin complicaciones.",
                   color: const Color(0xFF10B981),
                   gradient: const LinearGradient(
                     colors: [Color(0xFF10B981), Color(0xFF059669)],
                   ),
                 ),
                 _featureCard(
-                  icon: Icons.calendar_month_rounded,
-                  title: "Historial completo",
-                  desc: "Accede a tu registro médico personal de forma clara, organizada y siempre disponible.",
-                  color: const Color(0xFFF59E0B),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
-                  ),
-                ),
-                _featureCard(
-                  icon: Icons.analytics_rounded,
-                  title: "Estadísticas de adherencia",
-                  desc: "Visualiza tu progreso y mantén un seguimiento detallado de tu cumplimiento médico.",
+                  icon: Icons.lock_outline_rounded,
+                  title: "Privada y sin cuentas",
+                  desc: "No necesitas registrarte ni conectarte a internet. Toda tu información se guarda únicamente en tu teléfono.",
                   color: const Color(0xFF8B5CF6),
                   gradient: const LinearGradient(
                     colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
                   ),
                 ),
+                _featureCard(
+                  icon: Icons.calendar_month_rounded,
+                  title: "Tu historial a la mano",
+                  desc: "Consulta de forma simple y ordenada los medicamentos que ya tomaste y los que tienes pendientes.",
+                  color: const Color(0xFFF59E0B),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                  ),
+                ),
 
-                const SizedBox(height: 48),
+                const SizedBox(height: 44),
                 _backButton(context),
               ],
             ),
@@ -159,22 +160,23 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
           ),
           const SizedBox(height: 24),
           const Text(
-            "Tu salud es prioridad",
+            "Tu salud, siempre presente",
+            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 27,
               fontWeight: FontWeight.w900,
               color: Colors.white,
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Text(
-            "MediCare te acompaña cada día protegiendo tu tratamiento y brindándote tranquilidad.",
+            "MediCare te ayuda a recordar tus medicamentos todos los días, de forma simple y sin complicaciones.",
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 17,
+              fontSize: 18,
               height: 1.5,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withOpacity(0.95),
               letterSpacing: 0.2,
             ),
           ),
@@ -209,63 +211,53 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(28),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(28),
-          onTap: () {},
-          splashColor: color.withOpacity(0.1),
-          highlightColor: color.withOpacity(0.05),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: gradient,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: gradient,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
-                  child: Icon(icon, size: 32, color: Colors.white),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E3A5F),
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        desc,
-                        style: TextStyle(
-                          fontSize: 15,
-                          height: 1.5,
-                          color: const Color(0xFF64748B).withOpacity(0.9),
-                          letterSpacing: 0.1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
+              child: Icon(icon, size: 34, color: Colors.white),
             ),
-          ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF1E3A5F),
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    desc,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.5,
+                      color: const Color(0xFF64748B).withOpacity(0.95),
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -274,7 +266,7 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
   Widget _backButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 64,
+      height: 68,
       child: Container(
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -282,7 +274,7 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(34),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF3B82F6).withOpacity(0.4),
@@ -294,9 +286,9 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
         ),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(34),
           child: InkWell(
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(34),
             onTap: () => Navigator.pop(context),
             splashColor: Colors.white.withOpacity(0.2),
             highlightColor: Colors.white.withOpacity(0.1),
@@ -307,13 +299,13 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
                   Icon(
                     Icons.arrow_back_rounded,
                     color: Colors.white,
-                    size: 24,
+                    size: 26,
                   ),
                   SizedBox(width: 12),
                   Text(
                     "Volver",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 21,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                       letterSpacing: 0.5,

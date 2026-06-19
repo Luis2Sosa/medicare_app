@@ -46,7 +46,7 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
             opacity: _fadeAnimation,
             child: Stack(
               children: [
-                // LOGO PRINCIPAL INDEPENDIENTE
+                // LOGO PRINCIPAL
                 Positioned(
                   top: 60,
                   left: 0,
@@ -65,14 +65,14 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
                   left: 0,
                   right: 0,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 36),
                     child: const Text(
-                      "Tu recordatorio médico, siempre a tiempo",
+                      "Tu recordatorio de medicamentos,\nsiempre a tiempo",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 19,
+                        fontSize: 21,
                         fontStyle: FontStyle.italic,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: AppTheme.primaryBlue,
                         height: 1.4,
                         letterSpacing: 0.2,
@@ -88,12 +88,12 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
                     children: [
                       const SizedBox(height: 400),
 
-                      // BOTÓN GOOGLE
-                      _googleButton(context),
+                      // BOTÓN COMENZAR (entra directo, sin cuentas ni registro)
+                      _startButton(context),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 22),
 
-                      // BOTÓN SOBRE
+                      // BOTÓN SOBRE MEDICARE
                       _aboutButton(context),
                     ],
                   ),
@@ -106,27 +106,27 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _googleButton(BuildContext context) {
+  Widget _startButton(BuildContext context) {
     return Container(
-      width: 340,
-      height: 64,
+      width: 320,
+      height: 72,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(36),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.15),
             offset: const Offset(0, 4),
-            blurRadius: 12,
+            blurRadius: 14,
             spreadRadius: 2,
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(36),
         child: InkWell(
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(36),
           onTap: () {
             Navigator.pushReplacementNamed(context, "/home");
           },
@@ -136,31 +136,24 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.primaryBlue,
+                    shape: BoxShape.circle,
                   ),
-                  padding: const EdgeInsets.all(4),
-                  child: Image.asset(
-                    "assets/images/google.png",
-                    fit: BoxFit.contain,
+                  child: const Icon(
+                    Icons.medication_rounded,
+                    color: Colors.white,
+                    size: 24,
                   ),
                 ),
                 const SizedBox(width: 16),
                 const Text(
-                  "Entrar con Google",
+                  "Comenzar",
                   style: TextStyle(
                     color: Color(0xFF1E3A5F),
-                    fontSize: 19,
+                    fontSize: 22,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.2,
                   ),
@@ -176,9 +169,9 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
   Widget _aboutButton(BuildContext context) {
     return Container(
       width: 280,
-      height: 56,
+      height: 60,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(30),
         border: Border.all(
           color: AppTheme.primaryBlue,
           width: 2.5,
@@ -194,9 +187,9 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(30),
         child: InkWell(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(30),
           onTap: () {
             Navigator.pushNamed(context, "/about");
           },
@@ -209,14 +202,14 @@ class _StartScreenState extends State<StartScreen> with SingleTickerProviderStat
                 Icon(
                   Icons.info_outline_rounded,
                   color: AppTheme.primaryBlue,
-                  size: 22,
+                  size: 24,
                 ),
                 SizedBox(width: 10),
                 Text(
                   "Sobre MediCare",
                   style: TextStyle(
                     color: AppTheme.primaryBlue,
-                    fontSize: 17,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.2,
                   ),
