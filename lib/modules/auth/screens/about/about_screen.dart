@@ -1,4 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:medicare_app/core/app_theme.dart';
+
+const Color _deepBlue = Color(0xFF123C66);
+const Color _textBlue = Color(0xFF1E3A5F);
+const Color _muted = Color(0xFF64748B);
+
+class _FeatureData {
+  final IconData icon;
+  final String title;
+  final String desc;
+  const _FeatureData(this.icon, this.title, this.desc);
+}
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -11,6 +23,29 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  static const List<_FeatureData> _features = [
+    _FeatureData(
+      Icons.notifications_active_rounded,
+      "Recordatorios claros",
+      "Te avisa con tiempo cuándo tomar cada medicamento, con avisos fáciles de ver y de entender.",
+    ),
+    _FeatureData(
+      Icons.touch_app_rounded,
+      "Fácil de usar",
+      "Botones grandes y pasos sencillos, pensados para que cualquier persona pueda usarla sin complicaciones.",
+    ),
+    _FeatureData(
+      Icons.lock_outline_rounded,
+      "Privada y sin cuentas",
+      "No necesitas registrarte ni conectarte a internet. Toda tu información se guarda únicamente en tu teléfono.",
+    ),
+    _FeatureData(
+      Icons.calendar_month_rounded,
+      "Tu historial a la mano",
+      "Consulta de forma simple y ordenada los medicamentos que ya tomaste y los que tienes pendientes.",
+    ),
+  ];
 
   @override
   void initState() {
@@ -26,7 +61,7 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
     );
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
+      begin: const Offset(0, 0.08),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _controller,
@@ -45,24 +80,24 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF7FAFD),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          color: const Color(0xFF1E3A5F),
+          color: AppTheme.primaryBlue,
           tooltip: "Volver",
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           "Sobre MediCare",
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.w800,
-            color: Color(0xFF1E3A5F),
-            letterSpacing: 0.3,
+            color: _textBlue,
+            letterSpacing: 0.2,
           ),
         ),
       ),
@@ -72,51 +107,14 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
           position: _slideAnimation,
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
+            padding: const EdgeInsets.fromLTRB(22, 28, 22, 28),
             child: Column(
               children: [
                 _header(),
-                const SizedBox(height: 36),
-
-                _featureCard(
-                  icon: Icons.notifications_active_rounded,
-                  title: "Recordatorios claros",
-                  desc: "Te avisa con tiempo cuándo tomar cada medicamento, con avisos fáciles de ver y de entender.",
-                  color: const Color(0xFF3B82F6),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
-                  ),
-                ),
-                _featureCard(
-                  icon: Icons.touch_app_rounded,
-                  title: "Fácil de usar",
-                  desc: "Botones grandes y pasos sencillos, pensados para que cualquier persona pueda usarla sin complicaciones.",
-                  color: const Color(0xFF10B981),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF10B981), Color(0xFF059669)],
-                  ),
-                ),
-                _featureCard(
-                  icon: Icons.lock_outline_rounded,
-                  title: "Privada y sin cuentas",
-                  desc: "No necesitas registrarte ni conectarte a internet. Toda tu información se guarda únicamente en tu teléfono.",
-                  color: const Color(0xFF8B5CF6),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
-                  ),
-                ),
-                _featureCard(
-                  icon: Icons.calendar_month_rounded,
-                  title: "Tu historial a la mano",
-                  desc: "Consulta de forma simple y ordenada los medicamentos que ya tomaste y los que tienes pendientes.",
-                  color: const Color(0xFFF59E0B),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
-                  ),
-                ),
-
-                const SizedBox(height: 44),
-                _backButton(context),
+                const SizedBox(height: 30),
+                _featuresCard(),
+                const SizedBox(height: 34),
+                _footer(),
               ],
             ),
           ),
@@ -125,59 +123,89 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
     );
   }
 
+  // --- Encabezado: tarjeta hero con halo e ícono, en el mismo
+  // lenguaje visual (barra decorativa + jerarquía tipográfica) que
+  // el resto de la app, para que se sienta como una sola marca.
   Widget _header() {
     return Container(
-      padding: const EdgeInsets.all(32),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(26, 34, 26, 30),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF3B82F6), Color(0xFF1E40AF)],
+          colors: [AppTheme.primaryBlue, _deepBlue],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF3B82F6).withOpacity(0.4),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
-            spreadRadius: 0,
+            color: AppTheme.primaryBlue.withOpacity(0.35),
+            blurRadius: 26,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.favorite_rounded,
-              size: 56,
-              color: Colors.white,
+          SizedBox(
+            height: 92,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 92,
+                  height: 92,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.14),
+                  ),
+                ),
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.22),
+                  ),
+                  child: const Icon(
+                    Icons.favorite_rounded,
+                    size: 30,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
+          Container(
+            width: 36,
+            height: 3.5,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.55),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 14),
           const Text(
             "Tu salud, siempre presente",
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 27,
-              fontWeight: FontWeight.w900,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
               color: Colors.white,
-              letterSpacing: 0.5,
+              letterSpacing: 0.3,
+              height: 1.3,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text(
             "MediCare te ayuda a recordar tus medicamentos todos los días, de forma simple y sin complicaciones.",
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 18,
-              height: 1.5,
-              color: Colors.white.withOpacity(0.95),
-              letterSpacing: 0.2,
+              fontSize: 15.5,
+              height: 1.55,
+              color: Colors.white.withOpacity(0.92),
+              letterSpacing: 0.1,
             ),
           ),
         ],
@@ -185,138 +213,116 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _featureCard({
-    required IconData icon,
-    required String title,
-    required String desc,
-    required Color color,
-    required Gradient gradient,
-  }) {
+  // --- Lista de características: una sola tarjeta con renglones
+  // y divisores finos, todos en la misma paleta de marca (en vez de
+  // cuatro tarjetas sueltas con colores distintos cada una).
+  Widget _featuresCard() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: gradient,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+      child: Column(
+        children: [
+          for (int i = 0; i < _features.length; i++) ...[
+            _featureRow(_features[i]),
+            if (i != _features.length - 1)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Divider(height: 1, thickness: 1, color: Color(0xFFE9EEF5)),
               ),
-              child: Icon(icon, size: 34, color: Colors.white),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF1E3A5F),
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    desc,
-                    style: TextStyle(
-                      fontSize: 16,
-                      height: 1.5,
-                      color: const Color(0xFF64748B).withOpacity(0.95),
-                      letterSpacing: 0.1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _backButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 68,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1D4ED8), Color(0xFF1E40AF)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          borderRadius: BorderRadius.circular(34),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF3B82F6).withOpacity(0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-              spreadRadius: 0,
+  Widget _featureRow(_FeatureData f) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryBlue.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(16),
             ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(34),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(34),
-            onTap: () => Navigator.pop(context),
-            splashColor: Colors.white.withOpacity(0.2),
-            highlightColor: Colors.white.withOpacity(0.1),
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(
-                    Icons.arrow_back_rounded,
-                    color: Colors.white,
-                    size: 26,
+            child: Icon(f.icon, size: 27, color: AppTheme.primaryBlue),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  f.title,
+                  style: const TextStyle(
+                    fontSize: 19.5,
+                    fontWeight: FontWeight.w800,
+                    color: _textBlue,
+                    letterSpacing: 0.1,
                   ),
-                  SizedBox(width: 12),
-                  Text(
-                    "Volver",
-                    style: TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  f.desc,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: _muted,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ),
+        ],
       ),
+    );
+  }
+
+  // PIE DE PÁGINA — marca y aviso de derechos reservados.
+  Widget _footer() {
+    return Column(
+      children: [
+        Container(
+          width: 52,
+          height: 1.5,
+          decoration: BoxDecoration(
+            color: _muted.withOpacity(0.25),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          "Sosa Tech Lab",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: _textBlue.withOpacity(0.6),
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          "© 2026 · Todos los derechos reservados",
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: _muted.withOpacity(0.75),
+            letterSpacing: 0.2,
+          ),
+        ),
+      ],
     );
   }
 }
