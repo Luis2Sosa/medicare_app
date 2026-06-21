@@ -115,7 +115,7 @@ class _StartScreenState extends State<StartScreen>
                             ),
                           ),
 
-                          const Spacer(),
+                          const SizedBox(height: 120),
 
                           // BOTONES
                           FadeTransition(
