@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
+import 'package:medicare_app/core/database/app_database.dart';
 import 'package:medicare_app/modules/treatments/screens/treatment_form_screen.dart';
+
 
 class TreatmentListScreen extends StatefulWidget {
   const TreatmentListScreen({super.key});
@@ -10,7 +12,26 @@ class TreatmentListScreen extends StatefulWidget {
 }
 
 class _TreatmentListScreenState extends State<TreatmentListScreen> {
-  final List<Map<String, dynamic>> treatments = [];
+  List<Map<String, dynamic>> treatments = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTreatments();
+  }
+
+  Future<void> _loadTreatments() async {
+    final data = await AppDatabase.instance.getTreatments();
+
+    if (!mounted) return;
+
+    setState(() {
+      treatments = data;
+      isLoading = false;
+    });
+  }
+
 
   final List<Map<String, dynamic>> _mockTreatments = [
     {
@@ -29,7 +50,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final data = treatments.isEmpty ? _mockTreatments : treatments;
+    final data = treatments;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFB),
@@ -519,11 +540,15 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     );
   }
 
-  void _addTreatment() {
-    Navigator.push(
+  void _addTreatment() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const TreatmentFormScreen()),
     );
+
+    if (result == true) {
+      await _loadTreatments();
+    }
   }
 
   void _editTreatment(Map<String, dynamic> treatment) {
@@ -600,9 +625,12 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     );
   }
 
-  void _deleteTreatment(int index) {
-    final deleted = _mockTreatments[index];
-    setState(() => _mockTreatments.removeAt(index));
+  void _deleteTreatment(int index) async {
+    final deleted = treatments[index];
+
+    await AppDatabase.instance.deleteTreatment(deleted['id']);
+
+    await _loadTreatments();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -611,13 +639,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         backgroundColor: const Color(0xFF66BB6A),
-        action: SnackBarAction(
-          label: "Deshacer",
-          textColor: Colors.white,
-          onPressed: () {
-            setState(() => _mockTreatments.insert(index, deleted));
-          },
-        ),
         behavior: SnackBarBehavior.floating,
       ),
     );

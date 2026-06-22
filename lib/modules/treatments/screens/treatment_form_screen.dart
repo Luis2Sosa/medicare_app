@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
+import 'package:medicare_app/core/database/app_database.dart';
 
 class TreatmentFormScreen extends StatefulWidget {
   const TreatmentFormScreen({super.key});
@@ -380,7 +381,16 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
 
     setState(() => isLoading = true);
 
-    await Future.delayed(const Duration(milliseconds: 800));
+    final treatment = {
+      'name': _capitalize(nameCtrl.text.trim()),
+      'dosis': dosis,
+      'frecuencia': frecuencia,
+      'hora': _formatTime(selectedTime!),
+    };
+
+
+
+    await AppDatabase.instance.insertTreatment(treatment);
 
     if (!mounted) return;
 
@@ -392,8 +402,17 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
 
     if (!mounted) return;
 
-    Navigator.pop(context);
+    Navigator.pop(context, true);
   }
+
+  String _capitalize(String text) {
+    if (text.isEmpty) return text;
+
+    return text[0].toUpperCase() +
+        text.substring(1).toLowerCase();
+  }
+
+
 
   void _showSnackBar(String message, {required bool isError}) {
     ScaffoldMessenger.of(context).showSnackBar(
