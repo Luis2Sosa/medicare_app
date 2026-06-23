@@ -65,5 +65,16 @@ class AppDatabase {
       whereArgs: [id],
     );
   }
+
+  Future<int> updateTreatment(Map<String, dynamic> treatment) async {
+    final db = await instance.database;
+
+    return await db.update(
+      'treatments',
+      treatment,
+      where: 'id = ?',
+      whereArgs: [treatment['id']],
+    );
+  }
 }
 

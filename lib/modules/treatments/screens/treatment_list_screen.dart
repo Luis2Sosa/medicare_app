@@ -32,51 +32,40 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     });
   }
 
-
-  final List<Map<String, dynamic>> _mockTreatments = [
-    {
-      'name': 'Amoxicilina',
-      'dosis': '1 tableta',
-      'frecuencia': 'Cada 8 horas',
-      'hora': '9:00 AM',
-    },
-    {
-      'name': 'Ibuprofeno',
-      'dosis': '1 tableta',
-      'frecuencia': 'Cada 12 horas',
-      'hora': '3:00 PM',
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
     final data = treatments;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFB),
-      appBar: AppBar(
-        title: const Text(
-          "Mis Medicamentos",
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 26,
-            letterSpacing: 0.3,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1E3A5F),
-        centerTitle: true,
-        elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: const Color(0xFFE8EEF2),
-            height: 1,
-          ),
-        ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: AppTheme.mainGradient,
       ),
-      body: data.isEmpty ? _emptyState() : _buildList(data),
-      floatingActionButton: _addButton(),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text(
+            "Mis Medicamentos",
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 26,
+              letterSpacing: 0.3,
+            ),
+          ),
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF1E3A5F),
+          centerTitle: true,
+          elevation: 0,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(
+              color: const Color(0xFFE8EEF2),
+              height: 1,
+            ),
+          ),
+        ),
+        body: data.isEmpty ? _emptyState() : _buildList(data),
+        floatingActionButton: _addButton(),
+      ),
     );
   }
 
@@ -100,38 +89,13 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF66BB6A),
-                      Color(0xFF4CAF50),
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF66BB6A).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.favorite_rounded,
-                  size: 24,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 12),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Text(
-                    "¡Tu salud, nuestra prioridad!",
+                    "Recuerda tomar tu medicamento",
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 22,
                       fontWeight: FontWeight.w900,
                       color: Color(0xFF1E3A5F),
                       letterSpacing: 0.2,
@@ -139,9 +103,9 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    "${data.length} ${data.length == 1 ? 'medicamento' : 'medicamentos'} para hoy",
+                    "${data.length} ${data.length == 1 ? 'pendiente para hoy' : 'pendientes para hoy'}",
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 20,
                       color: Color(0xFF5B7C99),
                       fontWeight: FontWeight.w700,
                     ),
@@ -255,10 +219,38 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                           ],
                         ),
                       ),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: Color(0xFF90A4AE),
-                        size: 32,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE3F2FD),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF42A5F5),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.settings,
+                              size: 18,
+                              color: Color(0xFF1565C0),
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              "Opciones",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1565C0),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -551,17 +543,17 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     }
   }
 
-  void _editTreatment(Map<String, dynamic> treatment) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "Editando ${treatment['name']}",
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
-        backgroundColor: const Color(0xFF42A5F5),
-        behavior: SnackBarBehavior.floating,
+  void _editTreatment(Map<String, dynamic> treatment) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TreatmentFormScreen(treatment: treatment),
       ),
     );
+
+    if (result == true) {
+      await _loadTreatments();
+    }
   }
 
   void _confirmDelete(Map<String, dynamic> treatment, int index) {
@@ -569,7 +561,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: const EdgeInsets.all(28),
+        contentPadding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
         title: const Text(
           "¿Eliminar?",
           style: TextStyle(

@@ -3,8 +3,12 @@ import 'package:medicare_app/core/app_theme.dart';
 import 'package:medicare_app/core/database/app_database.dart';
 
 class TreatmentFormScreen extends StatefulWidget {
-  const TreatmentFormScreen({super.key});
+  final Map<String, dynamic>? treatment;
 
+  const TreatmentFormScreen({
+    super.key,
+    this.treatment,
+  });
   @override
   State<TreatmentFormScreen> createState() => _TreatmentFormScreenState();
 }
@@ -17,7 +21,20 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
   TimeOfDay? selectedTime;
 
   final TextEditingController nameCtrl = TextEditingController();
+  int? treatmentId;
   bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.treatment != null) {
+      nameCtrl.text = widget.treatment!['name'];
+      treatmentId = widget.treatment!['id'];
+      dosis = widget.treatment!['dosis'];
+      frecuencia = widget.treatment!['frecuencia'];
+    }
+  }
 
   @override
   void dispose() {
@@ -382,6 +399,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
     setState(() => isLoading = true);
 
     final treatment = {
+      'id': treatmentId,
       'name': _capitalize(nameCtrl.text.trim()),
       'dosis': dosis,
       'frecuencia': frecuencia,
@@ -390,7 +408,11 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
 
 
 
-    await AppDatabase.instance.insertTreatment(treatment);
+    if (treatmentId == null) {
+      await AppDatabase.instance.insertTreatment(treatment);
+    } else {
+      await AppDatabase.instance.updateTreatment(treatment);
+    }
 
     if (!mounted) return;
 
