@@ -20,6 +20,8 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
   String frecuencia = "Cada 8 horas";
   TimeOfDay? selectedTime;
 
+  int cantidad = 10;
+
   final TextEditingController nameCtrl = TextEditingController();
   int? treatmentId;
   bool isLoading = false;
@@ -186,6 +188,45 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                         ],
                         selected: frecuencia,
                         onSelect: (v) => setState(() => frecuencia = v),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      _label("¿Cuántas pastillas tienes?"),
+                      const SizedBox(height: 10),
+
+                      _inputCard(
+                        child: TextFormField(
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1E3A5F),
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: "Ej: 6",
+                            hintStyle: TextStyle(
+                              fontSize: 20,
+                              color: Color(0xFFB0BEC5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return "Ingresa la cantidad";
+                            }
+
+                            if (int.tryParse(value.trim()) == null) {
+                              return "Solo números";
+                            }
+
+                            return null;
+                          },
+                          onChanged: (value) {
+                            cantidad = int.tryParse(value.trim()) ?? 0;
+                          },
+                        ),
                       ),
 
                       const SizedBox(height: 28),
@@ -404,6 +445,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
       'dosis': dosis,
       'frecuencia': frecuencia,
       'hora': _formatTime(selectedTime!),
+      'cantidad': cantidad,
     };
 
 

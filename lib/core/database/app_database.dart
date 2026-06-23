@@ -21,21 +21,55 @@ class AppDatabase {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 3,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
   }
 
-  Future _createDB(Database db, int version) async {
+  Future<void> _createDB(Database db, int version) async {
     await db.execute('''
       CREATE TABLE treatments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         dosis TEXT NOT NULL,
         frecuencia TEXT NOT NULL,
-        hora TEXT NOT NULL
+        hora TEXT NOT NULL,
+        cantidad INTEGER NOT NULL DEFAULT 0
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        medicamento TEXT NOT NULL,
+        dosis TEXT NOT NULL,
+        fecha TEXT NOT NULL,
+        hora TEXT NOT NULL,
+        tomado INTEGER NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          medicamento TEXT NOT NULL,
+          dosis TEXT NOT NULL,
+          fecha TEXT NOT NULL,
+          hora TEXT NOT NULL,
+          tomado INTEGER NOT NULL
+        )
+      ''');
+    }
+
+    if (oldVersion < 3) {
+      await db.execute('''
+        ALTER TABLE treatments ADD COLUMN cantidad INTEGER NOT NULL DEFAULT 0
+      ''');
+    }
   }
 
   Future<int> insertTreatment(Map<String, dynamic> treatment) async {
@@ -52,7 +86,7 @@ class AppDatabase {
 
     return await db.query(
       'treatments',
-      orderBy: 'id DESC',
+      orderBy: 'hora ASC',
     );
   }
 
@@ -76,5 +110,22 @@ class AppDatabase {
       whereArgs: [treatment['id']],
     );
   }
-}
 
+  Future<int> insertHistory(Map<String, dynamic> historyItem) async {
+    final db = await instance.database;
+
+    return await db.insert(
+      'history',
+      historyItem,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getHistory() async {
+    final db = await instance.database;
+
+    return await db.query(
+      'history',
+      orderBy: 'id DESC',
+    );
+  }
+}

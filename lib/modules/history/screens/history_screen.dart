@@ -1,33 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
+import 'package:medicare_app/core/database/app_database.dart';
 
-class HistoryScreen extends StatelessWidget {
+class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
-  static final List<Map<String, dynamic>> historyData = [
-    {
-      'medicamento': 'Amoxicilina',
-      'fecha': '24 de abril',
-      'hora': '9:00 AM',
-      'tomado': true,
-    },
-    {
-      'medicamento': 'Ibuprofeno',
-      'fecha': '24 de abril',
-      'hora': '2:00 PM',
-      'tomado': true,
-    },
-    {
-      'medicamento': 'Amoxicilina',
-      'fecha': '24 de abril',
-      'hora': '5:00 PM',
-      'tomado': false,
-    },
-  ];
+  @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
+  List<Map<String, dynamic>> historyData = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    final data = await AppDatabase.instance.getHistory();
+
+    if (!mounted) return;
+
+    setState(() {
+      historyData = data;
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final tomados = historyData.where((e) => e['tomado'] == true).length;
+    final tomados = historyData.where((e) => e['tomado'] == 1).length;
     final omitidos = historyData.length - tomados;
 
     return Container(
@@ -49,7 +54,9 @@ class HistoryScreen extends StatelessWidget {
             ),
           ),
         ),
-        body: historyData.isEmpty
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : historyData.isEmpty
             ? _emptyState()
             : _buildList(tomados, omitidos),
       ),
@@ -156,7 +163,7 @@ class HistoryScreen extends StatelessWidget {
   }
 
   Widget _historyCard(Map<String, dynamic> item) {
-    final bool tomado = item['tomado'] ?? false;
+    final bool tomado = item['tomado'] == 1;
     final Color mainColor =
     tomado ? const Color(0xFF10B981) : const Color(0xFFEF4444);
 

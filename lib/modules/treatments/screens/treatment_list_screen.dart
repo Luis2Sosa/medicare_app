@@ -32,6 +32,22 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     });
   }
 
+
+  final List<Map<String, dynamic>> _mockTreatments = [
+    {
+      'name': 'Amoxicilina',
+      'dosis': '1 tableta',
+      'frecuencia': 'Cada 8 horas',
+      'hora': '9:00 AM',
+    },
+    {
+      'name': 'Ibuprofeno',
+      'dosis': '1 tableta',
+      'frecuencia': 'Cada 12 horas',
+      'hora': '3:00 PM',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
     final data = treatments;
@@ -328,17 +344,104 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                           color: Color(0xFF1E88E5),
                         ),
                         const SizedBox(width: 12),
-                        Text(
-                          treatment['frecuencia'],
-                          style: const TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF1565C0),
-                            letterSpacing: 0.2,
+                        Expanded(
+                          child: Text(
+                            treatment['frecuencia'],
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF1565C0),
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFF42A5F5),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Text(
+                            "Quedan ${treatment['cantidad'] ?? 0}",
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1565C0),
+                            ),
                           ),
                         ),
                       ],
                     ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 58,
+                          child: ElevatedButton.icon(
+                            onPressed: () => _markAsTaken(treatment),
+                            icon: const Icon(
+                              Icons.check_circle_rounded,
+                              size: 28,
+                            ),
+                            label: const Text(
+                              "Tomado",
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF10B981),
+                              foregroundColor: Colors.white,
+                              elevation: 5,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      Expanded(
+                        child: SizedBox(
+                          height: 58,
+                          child: ElevatedButton.icon(
+                            onPressed: () => _markAsSkipped(treatment),
+                            icon: const Icon(
+                              Icons.cancel_rounded,
+                              size: 28,
+                            ),
+                            label: const Text(
+                              "Omitir",
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFEF5350),
+                              foregroundColor: Colors.white,
+                              elevation: 5,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -631,6 +734,97 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         backgroundColor: const Color(0xFF66BB6A),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _markAsTaken(Map<String, dynamic> treatment) async {
+    final now = DateTime.now();
+
+    int cantidadActual = treatment['cantidad'] ?? 0;
+
+    int descuento = 1;
+
+    if (treatment['dosis'] == "2 tabletas") {
+      descuento = 2;
+    } else if (treatment['dosis'] == "Media") {
+      descuento = 1;
+    }
+
+    int nuevaCantidad = cantidadActual - descuento;
+
+    if (nuevaCantidad < 0) {
+      nuevaCantidad = 0;
+    }
+
+    final historyItem = {
+      'medicamento': treatment['name'],
+      'dosis': treatment['dosis'],
+      'fecha': '${now.day}/${now.month}/${now.year}',
+      'hora': treatment['hora'],
+      'tomado': 1,
+    };
+
+    await AppDatabase.instance.insertHistory(historyItem);
+
+    if (nuevaCantidad == 0) {
+      await AppDatabase.instance.deleteTreatment(treatment['id']);
+    } else {
+      final updatedTreatment = {
+        'id': treatment['id'],
+        'name': treatment['name'],
+        'dosis': treatment['dosis'],
+        'frecuencia': treatment['frecuencia'],
+        'hora': treatment['hora'],
+        'cantidad': nuevaCantidad,
+      };
+
+      await AppDatabase.instance.updateTreatment(updatedTreatment);
+    }
+
+    await _loadTreatments();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          nuevaCantidad == 0
+              ? "${treatment['name']} completado"
+              : "${treatment['name']} marcado como tomado",
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        backgroundColor: const Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _markAsSkipped(Map<String, dynamic> treatment) async {
+    final now = DateTime.now();
+
+    final historyItem = {
+      'medicamento': treatment['name'],
+      'dosis': treatment['dosis'],
+      'fecha': '${now.day}/${now.month}/${now.year}',
+      'hora': treatment['hora'],
+      'tomado': 0,
+    };
+
+    await AppDatabase.instance.insertHistory(historyItem);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "${treatment['name']} marcado como omitido",
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        backgroundColor: const Color(0xFFEF5350),
         behavior: SnackBarBehavior.floating,
       ),
     );
