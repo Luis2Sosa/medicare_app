@@ -53,6 +53,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
               fontSize: 27,
             ),
           ),
+
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEBEE),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: IconButton(
+                  onPressed: _confirmDeleteHistory,
+                  icon: const Icon(
+                    Icons.delete_forever_rounded,
+                    color: Color(0xFFEF5350),
+                    size: 35,
+                  ),
+                ),
+              ),
+            ),
+          ],
+
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -336,6 +357,92 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmDeleteHistory() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        title: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.delete_forever_rounded,
+              color: Color(0xFFEF5350),
+              size: 56,
+            ),
+            SizedBox(height: 12),
+            Text(
+              "Borrar historial",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF1E3A5F),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          "Esta acción eliminará todo el historial de medicamentos tomados y omitidos.",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF5B7C99),
+            height: 1.4,
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              "Cancelar",
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF5350),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: () async {
+              Navigator.pop(context);
+
+              await AppDatabase.instance.deleteAllHistory();
+
+              await _loadHistory();
+
+              if (!mounted) return;
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Historial eliminado correctamente"),
+                  backgroundColor: Color(0xFFEF5350),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: const Text(
+              "Eliminar",
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

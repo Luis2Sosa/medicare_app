@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
-import 'package:medicare_app/modules/treatments/screens/treatment_list_screen.dart';
-
-
-// 🔵 IMPORTS DE CADA MÓDULO
-import 'package:medicare_app/modules/treatments/screens/treatment_list_screen.dart';
-import 'package:medicare_app/modules/alarms/screens/alarm_home_screen.dart';
 import 'package:medicare_app/modules/history/screens/history_screen.dart';
+import 'package:medicare_app/modules/tips/screens/tips_screen.dart';
+import 'package:medicare_app/modules/treatments/screens/treatment_list_screen.dart';
 
 class MainNavScreen extends StatefulWidget {
   final int initialIndex;
@@ -25,7 +21,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
 
   final List<Widget> screens = const [
     TreatmentListScreen(),
-    AlarmHomeScreen(),
+    TipsScreen(),
     HistoryScreen(),
   ];
 
@@ -39,7 +35,6 @@ class _MainNavScreenState extends State<MainNavScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: screens[index],
-
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -60,16 +55,16 @@ class _MainNavScreenState extends State<MainNavScreen> {
           onTap: (i) => setState(() => index = i),
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.medication),
-              label: "Tratamientos",
+              icon: Icon(Icons.medication_rounded),
+              label: 'Tratamientos',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.alarm),
-              label: "Alarma",
+              icon: Icon(Icons.lightbulb_rounded),
+              label: 'Consejos',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.history),
-              label: "Historial",
+              icon: Icon(Icons.history_rounded),
+              label: 'Historial',
             ),
           ],
         ),

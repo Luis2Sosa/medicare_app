@@ -128,4 +128,10 @@ class AppDatabase {
       orderBy: 'id DESC',
     );
   }
+
+  Future<int> deleteAllHistory() async {
+    final db = await instance.database;
+
+    return await db.delete('history');
+  }
 }

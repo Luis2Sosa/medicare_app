@@ -46,8 +46,12 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFB),
+    return Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.mainGradient,
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -182,6 +186,8 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                       const SizedBox(height: 12),
                       _segmentSelector(
                         items: [
+                          "Cada 4 horas",
+                          "Cada 6 horas",
                           "Cada 8 horas",
                           "Cada 12 horas",
                           "Cada 24 horas",
@@ -192,7 +198,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
 
                       const SizedBox(height: 28),
 
-                      _label("¿Cuántas pastillas tienes?"),
+                      _label("¿Cuántas pastillas tienes? (opcional)"),
                       const SizedBox(height: 10),
 
                       _inputCard(
@@ -214,7 +220,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return "Ingresa la cantidad";
+                              return null;
                             }
 
                             if (int.tryParse(value.trim()) == null) {
@@ -291,6 +297,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
           ],
         ),
       ),
+        )
     );
   }
 
