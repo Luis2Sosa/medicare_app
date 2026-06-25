@@ -49,118 +49,159 @@ class TipsScreen extends StatelessWidget {
     final tip = tips[todayIndex];
 
     return Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.mainGradient,
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 40, 22, 22),
-          child: Column(
-            children: [
-              const Text(
-                'Consejos de salud',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1E3A5F),
+      decoration: const BoxDecoration(
+        gradient: AppTheme.mainGradient,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 40, 22, 22),
+            child: Column(
+              children: [
+                const Text(
+                  'Consejos de salud',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1E3A5F),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Un consejo nuevo cada día',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF64748B),
+                const SizedBox(height: 8),
+                const Text(
+                  'Un consejo nuevo cada día',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF64748B),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 28),
-              Expanded(
-                child: Center(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(34),
-                      border: Border.all(
-                        color: const Color(0xFFD7EAFB),
-                        width: 2,
+                const SizedBox(height: 28),
+
+                Expanded(
+                  child: Center(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(28),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(34),
+                        border: Border.all(
+                          color: const Color(0xFFD7EAFB),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.07),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.07),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFE3F2FD),
-                            shape: BoxShape.circle,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFE3F2FD),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              tip.icon,
+                              size: 82,
+                              color: const Color(0xFF1976D2),
+                            ),
                           ),
-                          child: Icon(
-                            tip.icon,
-                            size: 82,
-                            color: const Color(0xFF1976D2),
+                          const SizedBox(height: 28),
+                          Text(
+                            tip.title,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1E3A5F),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 28),
-                        Text(
-                          tip.title,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF1E3A5F),
+                          const SizedBox(height: 22),
+                          Text(
+                            tip.message,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              height: 1.38,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF334155),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 22),
-                        Text(
-                          tip.message,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            height: 1.38,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF334155),
-                          ),
-                        ),
-                        const SizedBox(height: 34),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-          const SizedBox(height: 8),
 
-          Padding(
-            padding: const EdgeInsets.only(bottom: 25),
-            child: const Text(
-              'Recuerda seguir siempre las indicaciones de tu médico.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                height: 1.3,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF64748B),
-              ),
+                const SizedBox(height: 12),
+
+                _settingsButton(context),
+
+                const SizedBox(height: 16),
+
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 25),
+                  child: Text(
+                    'Recuerda seguir siempre las indicaciones de tu médico.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.3,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          ]
           ),
         ),
       ),
-        )
+    );
+  }
+
+  Widget _settingsButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 58,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          Navigator.pushNamed(context, '/settings');
+        },
+        icon: const Icon(
+          Icons.settings_rounded,
+          size: 26,
+        ),
+        label: const Text(
+          'Configuración',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF1976D2),
+          elevation: 4,
+          shadowColor: Colors.black26,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(
+              color: Color(0xFFD7EAFB),
+              width: 2,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

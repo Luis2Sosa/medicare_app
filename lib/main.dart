@@ -7,6 +7,8 @@ import 'package:medicare_app/modules/auth/screens/about/about_screen.dart';
 import 'package:medicare_app/modules/treatments/screens/treatment_form_screen.dart';
 import 'package:medicare_app/modules/home/main_nav_screen.dart';
 
+import 'modules/tips/settings/settings_screen.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MediCareApp());
@@ -22,14 +24,13 @@ class MediCareApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.themeData,
 
-      // 🔵 RUTAS REGISTRADAS
       routes: {
         "/about": (context) => const AboutScreen(),
         "/treatment_form": (context) => const TreatmentFormScreen(),
         "/home": (context) => const MainNavScreen(initialIndex: 0),
+        "/settings": (context) => const SettingsScreen(),
       },
 
-      // 🔵 PANTALLA INICIAL
       home: const StartScreen(),
     );
   }
