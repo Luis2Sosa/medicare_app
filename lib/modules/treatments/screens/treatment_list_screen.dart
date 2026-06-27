@@ -50,6 +50,8 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 400;
     final data = treatments;
 
     return Container(
@@ -79,19 +81,33 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
             ),
           ),
         ),
-        body: data.isEmpty ? _emptyState() : _buildList(data),
+        body: isLoading
+            ? _buildLoadingState()
+            : (data.isEmpty ? _emptyState(isSmallScreen) : _buildList(data, isSmallScreen)),
         floatingActionButton: _addButton(),
       ),
     );
   }
 
-  Widget _buildList(List<Map<String, dynamic>> data) {
+  Widget _buildLoadingState() {
+    return Center(
+      child: CircularProgressIndicator(
+        color: const Color(0xFF42A5F5),
+        strokeWidth: 4,
+      ),
+    );
+  }
+
+  Widget _buildList(List<Map<String, dynamic>> data, bool isSmallScreen) {
     return Column(
       children: [
         // HEADER COMPACTO
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 16 : 20,
+            vertical: isSmallScreen ? 12 : 16,
+          ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -108,21 +124,21 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     "Recuerda tomar tu medicamento",
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: isSmallScreen ? 18 : 22,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFF1E3A5F),
+                      color: const Color(0xFF1E3A5F),
                       letterSpacing: 0.2,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     "${data.length} ${data.length == 1 ? 'pendiente para hoy' : 'pendientes para hoy'}",
-                    style: const TextStyle(
-                      fontSize: 20,
-                      color: Color(0xFF5B7C99),
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 16 : 20,
+                      color: const Color(0xFF5B7C99),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -135,10 +151,15 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
         // LISTA CON MÁS ESPACIO
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            padding: EdgeInsets.fromLTRB(
+              isSmallScreen ? 16 : 20,
+              isSmallScreen ? 12 : 16,
+              isSmallScreen ? 16 : 20,
+              isSmallScreen ? 12 : 20,
+            ),
             itemCount: data.length,
             itemBuilder: (context, index) {
-              return _treatmentCard(data[index], index);
+              return _treatmentCard(data[index], index, isSmallScreen);
             },
           ),
         ),
@@ -146,11 +167,11 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     );
   }
 
-  Widget _treatmentCard(Map<String, dynamic> treatment, int index) {
+  Widget _treatmentCard(Map<String, dynamic> treatment, int index, bool isSmallScreen) {
     return GestureDetector(
-      onTap: () => _showOptions(treatment, index),
+      onTap: () => _showOptions(treatment, index, isSmallScreen),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 18),
+        margin: EdgeInsets.only(bottom: isSmallScreen ? 14 : 18),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -171,9 +192,9 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           borderRadius: BorderRadius.circular(24),
           child: InkWell(
             borderRadius: BorderRadius.circular(24),
-            onTap: () => _showOptions(treatment, index),
+            onTap: () => _showOptions(treatment, index, isSmallScreen),
             child: Padding(
-              padding: const EdgeInsets.all(22),
+              padding: EdgeInsets.all(isSmallScreen ? 14 : 22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -181,7 +202,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(isSmallScreen ? 10 : 16),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [
@@ -198,37 +219,37 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.medication_rounded,
-                          size: 36,
+                          size: isSmallScreen ? 24 : 36,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 18),
+                      SizedBox(width: isSmallScreen ? 12 : 18),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // ✅ NOMBRE MUCHO MÁS GRANDE
                             Text(
-                              treatment['name'],
-                              style: const TextStyle(
-                                fontSize: 28,
+                              treatment['name'] ?? 'Medicamento',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 20 : 28,
                                 fontWeight: FontWeight.w900,
-                                color: Color(0xFF1E3A5F),
+                                color: const Color(0xFF1E3A5F),
                                 letterSpacing: 0.2,
                                 height: 1.2,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 6),
+                            SizedBox(height: isSmallScreen ? 4 : 6),
                             // ✅ DOSIS MÁS GRANDE Y NEGRA
                             Text(
-                              treatment['dosis'],
-                              style: const TextStyle(
-                                fontSize: 19,
-                                color: Color(0xFF1E3A5F),
+                              treatment['dosis'] ?? '1 tableta',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 14 : 19,
+                                color: const Color(0xFF1E3A5F),
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -236,9 +257,9 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isSmallScreen ? 8 : 12,
+                          vertical: isSmallScreen ? 6 : 8,
                         ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE3F2FD),
@@ -248,21 +269,21 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                             width: 1.5,
                           ),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
                               Icons.settings,
-                              size: 18,
-                              color: Color(0xFF1565C0),
+                              size: isSmallScreen ? 14 : 18,
+                              color: const Color(0xFF1565C0),
                             ),
-                            SizedBox(width: 6),
+                            SizedBox(width: isSmallScreen ? 4 : 6),
                             Text(
                               "Opciones",
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: isSmallScreen ? 12 : 14,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF1565C0),
+                                color: const Color(0xFF1565C0),
                               ),
                             ),
                           ],
@@ -271,14 +292,14 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 20),
+                  SizedBox(height: isSmallScreen ? 14 : 20),
 
                   // ✅ HORA MÁS GRANDE Y PROMINENTE
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 14 : 20,
+                      vertical: isSmallScreen ? 10 : 14,
                     ),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
@@ -299,16 +320,16 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.access_time_rounded,
                           color: Colors.white,
-                          size: 32,
+                          size: isSmallScreen ? 24 : 32,
                         ),
-                        const SizedBox(width: 14),
+                        SizedBox(width: isSmallScreen ? 10 : 14),
                         Text(
-                          treatment['hora'],
-                          style: const TextStyle(
-                            fontSize: 32,
+                          treatment['hora'] ?? '00:00 AM',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 22 : 32,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
                             letterSpacing: -0.5,
@@ -318,14 +339,14 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  SizedBox(height: isSmallScreen ? 12 : 16),
 
                   // ✅ FRECUENCIA MÁS GRANDE
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 14 : 18,
+                      vertical: isSmallScreen ? 10 : 12,
                     ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE3F2FD),
@@ -338,27 +359,30 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.repeat_rounded,
-                          size: 26,
-                          color: Color(0xFF1E88E5),
+                          size: isSmallScreen ? 20 : 26,
+                          color: const Color(0xFF1E88E5),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: isSmallScreen ? 8 : 12),
                         Expanded(
                           child: Text(
-                            treatment['frecuencia'],
+                            treatment['frecuencia'] ?? 'Cada 8 horas',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 18,
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 14 : 18,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF1565C0),
+                              color: const Color(0xFF1565C0),
                               letterSpacing: 0.2,
                             ),
                           ),
                         ),
 
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isSmallScreen ? 8 : 10,
+                            vertical: isSmallScreen ? 4 : 6,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
@@ -369,10 +393,10 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                           ),
                           child: Text(
                             "Quedan ${treatment['cantidad'] ?? 0}",
-                            style: const TextStyle(
-                              fontSize: 15,
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 12 : 15,
                               fontWeight: FontWeight.w900,
-                              color: Color(0xFF1565C0),
+                              color: const Color(0xFF1565C0),
                             ),
                           ),
                         ),
@@ -380,23 +404,23 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  SizedBox(height: isSmallScreen ? 12 : 16),
 
                   Row(
                     children: [
                       Expanded(
                         child: SizedBox(
-                          height: 58,
+                          height: isSmallScreen ? 44 : 58,
                           child: ElevatedButton.icon(
                             onPressed: () => _markAsTaken(treatment),
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.check_circle_rounded,
-                              size: 28,
+                              size: isSmallScreen ? 20 : 28,
                             ),
-                            label: const Text(
+                            label: Text(
                               "Tomado",
                               style: TextStyle(
-                                fontSize: 19,
+                                fontSize: isSmallScreen ? 14 : 19,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
@@ -412,21 +436,21 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                         ),
                       ),
 
-                      const SizedBox(width: 12),
+                      SizedBox(width: isSmallScreen ? 8 : 12),
 
                       Expanded(
                         child: SizedBox(
-                          height: 58,
+                          height: isSmallScreen ? 44 : 58,
                           child: ElevatedButton.icon(
                             onPressed: () => _markAsSkipped(treatment),
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.cancel_rounded,
-                              size: 28,
+                              size: isSmallScreen ? 20 : 28,
                             ),
-                            label: const Text(
+                            label: Text(
                               "Omitir",
                               style: TextStyle(
-                                fontSize: 19,
+                                fontSize: isSmallScreen ? 14 : 19,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
@@ -452,60 +476,65 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     );
   }
 
-  Widget _emptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(44),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFE3F2FD),
-                    Color(0xFFBBDEFB),
+  Widget _emptyState(bool isSmallScreen) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.all(isSmallScreen ? 24 : 40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: isSmallScreen ? 40 : 60),
+              Container(
+                padding: EdgeInsets.all(isSmallScreen ? 32 : 44),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFFE3F2FD),
+                      Color(0xFFBBDEFB),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF64B5F6).withOpacity(0.3),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
                   ],
                 ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF64B5F6).withOpacity(0.3),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                child: Icon(
+                  Icons.medical_services_rounded,
+                  size: isSmallScreen ? 70 : 100,
+                  color: const Color(0xFF42A5F5),
+                ),
               ),
-              child: const Icon(
-                Icons.medical_services_rounded,
-                size: 100,
-                color: Color(0xFF42A5F5),
+              SizedBox(height: isSmallScreen ? 28 : 40),
+              Text(
+                "¡Vamos a empezar!",
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 24 : 30,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF1E3A5F),
+                  letterSpacing: 0.3,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 40),
-            const Text(
-              "¡Vamos a empezar!",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w900,
-                color: Color(0xFF1E3A5F),
-                letterSpacing: 0.3,
+              SizedBox(height: isSmallScreen ? 12 : 16),
+              Text(
+                "Agrega tu primer medicamento\npara comenzar tu seguimiento",
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 16 : 20,
+                  color: const Color(0xFF5B7C99),
+                  fontWeight: FontWeight.w600,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              "Agrega tu primer medicamento\npara comenzar tu seguimiento",
-              style: TextStyle(
-                fontSize: 20,
-                color: Color(0xFF5B7C99),
-                fontWeight: FontWeight.w600,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              SizedBox(height: isSmallScreen ? 40 : 60),
+            ],
+          ),
         ),
       ),
     );
@@ -528,7 +557,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     );
   }
 
-  void _showOptions(Map<String, dynamic> treatment, int index) {
+  void _showOptions(Map<String, dynamic> treatment, int index, bool isSmallScreen) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -537,7 +566,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        padding: const EdgeInsets.all(28),
+        padding: EdgeInsets.all(isSmallScreen ? 20 : 28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -549,54 +578,57 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: isSmallScreen ? 16 : 24),
             // ✅ NOMBRE MÁS GRANDE EN EL MODAL
             Text(
-              treatment['name'],
-              style: const TextStyle(
-                fontSize: 28,
+              treatment['name'] ?? 'Medicamento',
+              style: TextStyle(
+                fontSize: isSmallScreen ? 22 : 28,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF1E3A5F),
+                color: const Color(0xFF1E3A5F),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: isSmallScreen ? 6 : 8),
             Text(
               "${treatment['dosis']} • ${treatment['hora']}",
-              style: const TextStyle(
-                fontSize: 19,
-                color: Color(0xFF5B7C99),
+              style: TextStyle(
+                fontSize: isSmallScreen ? 16 : 19,
+                color: const Color(0xFF5B7C99),
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: isSmallScreen ? 24 : 32),
             _optionButton(
               icon: Icons.edit_rounded,
               label: "Editar",
               color: const Color(0xFF42A5F5),
+              isSmallScreen: isSmallScreen,
               onTap: () {
                 Navigator.pop(context);
                 _editTreatment(treatment);
               },
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: isSmallScreen ? 10 : 14),
             _optionButton(
               icon: Icons.delete_rounded,
               label: "Eliminar",
               color: const Color(0xFFEF5350),
+              isSmallScreen: isSmallScreen,
               onTap: () {
                 Navigator.pop(context);
                 _confirmDelete(treatment, index);
               },
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: isSmallScreen ? 10 : 14),
             _optionButton(
               icon: Icons.close_rounded,
               label: "Cancelar",
               color: const Color(0xFF90A4AE),
+              isSmallScreen: isSmallScreen,
               onTap: () => Navigator.pop(context),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: isSmallScreen ? 8 : 12),
           ],
         ),
       ),
@@ -607,18 +639,19 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     required IconData icon,
     required String label,
     required Color color,
+    required bool isSmallScreen,
     required VoidCallback onTap,
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 64,
+      height: isSmallScreen ? 50 : 64,
       child: ElevatedButton.icon(
         onPressed: onTap,
-        icon: Icon(icon, size: 28),
+        icon: Icon(icon, size: isSmallScreen ? 22 : 28),
         label: Text(
           label,
-          style: const TextStyle(
-            fontSize: 20,
+          style: TextStyle(
+            fontSize: isSmallScreen ? 16 : 20,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -660,25 +693,32 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   }
 
   void _confirmDelete(Map<String, dynamic> treatment, int index) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 400;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: const EdgeInsets.fromLTRB(28, 28, 28, 40),
-        title: const Text(
+        contentPadding: EdgeInsets.fromLTRB(
+          isSmallScreen ? 20 : 28,
+          isSmallScreen ? 20 : 28,
+          isSmallScreen ? 20 : 28,
+          isSmallScreen ? 30 : 40,
+        ),
+        title: Text(
           "¿Eliminar?",
           style: TextStyle(
-            fontSize: 28,
+            fontSize: isSmallScreen ? 24 : 28,
             fontWeight: FontWeight.w900,
-            color: Color(0xFF1E3A5F),
+            color: const Color(0xFF1E3A5F),
           ),
           textAlign: TextAlign.center,
         ),
         content: Text(
           "¿Seguro que quieres eliminar ${treatment['name']}?",
-          style: const TextStyle(
-            fontSize: 19,
-            color: Color(0xFF5B7C99),
+          style: TextStyle(
+            fontSize: isSmallScreen ? 16 : 19,
+            color: const Color(0xFF5B7C99),
             fontWeight: FontWeight.w600,
           ),
           textAlign: TextAlign.center,
@@ -687,14 +727,17 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen ? 16 : 24,
+                vertical: isSmallScreen ? 10 : 14,
+              ),
             ),
-            child: const Text(
+            child: Text(
               "No",
               style: TextStyle(
-                fontSize: 19,
+                fontSize: isSmallScreen ? 16 : 19,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF90A4AE),
+                color: const Color(0xFF90A4AE),
               ),
             ),
           ),
@@ -705,12 +748,15 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
             },
             style: TextButton.styleFrom(
               foregroundColor: const Color(0xFFEF5350),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen ? 16 : 24,
+                vertical: isSmallScreen ? 10 : 14,
+              ),
             ),
-            child: const Text(
+            child: Text(
               "Sí, eliminar",
               style: TextStyle(
-                fontSize: 19,
+                fontSize: isSmallScreen ? 16 : 19,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -726,6 +772,8 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     await AppDatabase.instance.deleteTreatment(deleted['id']);
 
     await _loadTreatments();
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -789,6 +837,8 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     }
 
     await _loadTreatments();
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -883,6 +933,8 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     await AppDatabase.instance.updateTreatment(updatedTreatment);
 
     await _loadTreatments();
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

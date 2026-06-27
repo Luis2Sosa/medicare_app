@@ -1,9 +1,32 @@
+// =============================================================================
+// AboutScreen — versión mejorada
+// -----------------------------------------------------------------------------
+// Cambios principales:
+//  • Encabezado con halo animado (mismo lenguaje visual que la pantalla de
+//    inicio) y un ícono un poco más grande.
+//  • Botón de volver con fondo circular, más fácil de tocar.
+//  • Tarjetas de características con ícono en degradado (igual estilo que
+//    los "chips" del inicio) en vez de un solo color plano.
+//  • Todo el contenido se centra y se limita a un ancho máximo en pantallas
+//    grandes (tablets / phablets), para que no se vea estirado.
+//  • Tamaños de fuente, íconos y espacios calculados con clamp() según el
+//    ancho disponible: se ven bien tanto en un celular chico como en uno
+//    grande, sin desbordes ni elementos gigantes.
+//  • Se limita el escalado de fuente del sistema (accesibilidad) para que
+//    un texto muy grande no rompa el diseño.
+// =============================================================================
+
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
 
 const Color _deepBlue = Color(0xFF123C66);
 const Color _textBlue = Color(0xFF1E3A5F);
 const Color _muted = Color(0xFF64748B);
+
+/// Evita el problema clásico de Dart donde `num.clamp(...)` devuelve `num`
+/// en vez de `double` y rompe la compilación al asignarlo a una variable
+/// `double`.
+double _clampD(num value, double lo, double hi) => value.clamp(lo, hi).toDouble();
 
 class _FeatureData {
   final IconData icon;
@@ -19,10 +42,14 @@ class AboutScreen extends StatefulWidget {
   State<AboutScreen> createState() => _AboutScreenState();
 }
 
-class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+class _AboutScreenState extends State<AboutScreen>
+    with TickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<Offset> _slideAnimation;
+
+  // Pulso suave e infinito detrás del ícono del encabezado.
+  late final AnimationController _haloController;
 
   static const List<_FeatureData> _features = [
     _FeatureData(
@@ -69,67 +96,105 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
     ));
 
     _controller.forward();
+
+    _haloController = AnimationController(
+      duration: const Duration(milliseconds: 2400),
+      vsync: this,
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _haloController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7FAFD),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          color: AppTheme.primaryBlue,
-          tooltip: "Volver",
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Sobre MediCare",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: _textBlue,
-            letterSpacing: 0.2,
+    // Limitamos el escalado de fuente del sistema para que un texto de
+    // accesibilidad muy grande no rompa el diseño, sin eliminarlo del todo.
+    final clampedTextScaler = MediaQuery.textScalerOf(context)
+        .clamp(minScaleFactor: 0.9, maxScaleFactor: 1.15);
+
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: clampedTextScaler),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF7FAFD),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Center(
+              child: _BackButton(onTap: () => Navigator.pop(context)),
+            ),
+          ),
+          title: const Text(
+            "Sobre MediCare",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: _textBlue,
+              letterSpacing: 0.2,
+            ),
           ),
         ),
-      ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(22, 28, 22, 28),
-            child: Column(
-              children: [
-                _header(),
-                const SizedBox(height: 30),
-                _featuresCard(),
-                const SizedBox(height: 34),
-                _footer(),
-              ],
-            ),
+        body: SafeArea(
+          top: false,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final m = _AboutMetrics.of(constraints);
+
+              return FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                      m.outerPaddingH,
+                      28,
+                      m.outerPaddingH,
+                      28,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 520),
+                        child: Column(
+                          children: [
+                            _header(m),
+                            const SizedBox(height: 30),
+                            _featuresCard(m),
+                            const SizedBox(height: 34),
+                            _footer(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  // --- Encabezado: tarjeta hero con halo e ícono, en el mismo
-  // lenguaje visual (barra decorativa + jerarquía tipográfica) que
-  // el resto de la app, para que se sienta como una sola marca.
-  Widget _header() {
+  // --- Encabezado: tarjeta hero con halo animado e ícono, en el mismo
+  // lenguaje visual (barra decorativa + jerarquía tipográfica) que el
+  // resto de la app, para que se sienta como una sola marca.
+  Widget _header(_AboutMetrics m) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(26, 34, 26, 30),
+      padding: EdgeInsets.fromLTRB(
+        m.headerPaddingH,
+        m.headerPaddingTop,
+        m.headerPaddingH,
+        m.headerPaddingBottom,
+      ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppTheme.primaryBlue, _deepBlue],
@@ -148,28 +213,40 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
       child: Column(
         children: [
           SizedBox(
-            height: 92,
+            height: m.headerIconOuter,
+            width: m.headerIconOuter,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Container(
-                  width: 92,
-                  height: 92,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.14),
-                  ),
+                AnimatedBuilder(
+                  animation: _haloController,
+                  builder: (context, _) {
+                    final double t = _haloController.value;
+                    final double pulseScale = 1.0 + (t * 0.14);
+                    final double pulseOpacity = _clampD(0.20 - (t * 0.08), 0.10, 0.20);
+                    return Transform.scale(
+                      scale: pulseScale,
+                      child: Container(
+                        width: m.headerIconOuter,
+                        height: m.headerIconOuter,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(pulseOpacity),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 Container(
-                  width: 62,
-                  height: 62,
+                  width: m.headerIconInner,
+                  height: m.headerIconInner,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white.withOpacity(0.22),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.favorite_rounded,
-                    size: 30,
+                    size: m.headerIconSize,
                     color: Colors.white,
                   ),
                 ),
@@ -186,15 +263,18 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            "Tu salud, siempre presente",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: 0.3,
-              height: 1.3,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              "Tu salud, siempre presente",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: m.headerTitleSize,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                letterSpacing: 0.3,
+                height: 1.3,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -202,7 +282,7 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
             "MediCare te ayuda a recordar tus medicamentos todos los días, de forma simple y sin complicaciones.",
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 15.5,
+              fontSize: m.headerDescSize,
               height: 1.55,
               color: Colors.white.withOpacity(0.92),
               letterSpacing: 0.1,
@@ -213,10 +293,9 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
     );
   }
 
-  // --- Lista de características: una sola tarjeta con renglones
-  // y divisores finos, todos en la misma paleta de marca (en vez de
-  // cuatro tarjetas sueltas con colores distintos cada una).
-  Widget _featuresCard() {
+  // --- Lista de características: una sola tarjeta con renglones y
+  // divisores finos, todos en la misma paleta de marca.
+  Widget _featuresCard(_AboutMetrics m) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -232,11 +311,11 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
       child: Column(
         children: [
           for (int i = 0; i < _features.length; i++) ...[
-            _featureRow(_features[i]),
+            _featureRow(_features[i], m),
             if (i != _features.length - 1)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Divider(height: 1, thickness: 1, color: Color(0xFFE9EEF5)),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: m.featureRowPadding),
+                child: const Divider(height: 1, thickness: 1, color: Color(0xFFE9EEF5)),
               ),
           ],
         ],
@@ -244,30 +323,37 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _featureRow(_FeatureData f) {
+  Widget _featureRow(_FeatureData f, _AboutMetrics m) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(m.featureRowPadding),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 54,
-            height: 54,
+            width: m.featureIconBox,
+            height: m.featureIconBox,
             decoration: BoxDecoration(
-              color: AppTheme.primaryBlue.withOpacity(0.10),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryBlue.withOpacity(0.16),
+                  AppTheme.primaryBlue.withOpacity(0.07),
+                ],
+              ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(f.icon, size: 27, color: AppTheme.primaryBlue),
+            child: Icon(f.icon, size: m.featureIconSize, color: AppTheme.primaryBlue),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: m.featureGap),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   f.title,
-                  style: const TextStyle(
-                    fontSize: 19.5,
+                  style: TextStyle(
+                    fontSize: m.featureTitleSize,
                     fontWeight: FontWeight.w800,
                     color: _textBlue,
                     letterSpacing: 0.1,
@@ -276,8 +362,8 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
                 const SizedBox(height: 7),
                 Text(
                   f.desc,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: m.featureDescSize,
                     height: 1.5,
                     color: _muted,
                   ),
@@ -323,6 +409,130 @@ class _AboutScreenState extends State<AboutScreen> with SingleTickerProviderStat
           ),
         ),
       ],
+    );
+  }
+}
+
+// =============================================================================
+// _BackButton — botón de volver con fondo circular, más fácil de tocar
+// (cumple el tamaño mínimo de 44x44 recomendado para accesibilidad) y con
+// una pequeña animación al presionarlo.
+// =============================================================================
+class _BackButton extends StatefulWidget {
+  final VoidCallback onTap;
+  const _BackButton({required this.onTap});
+
+  @override
+  State<_BackButton> createState() => _BackButtonState();
+}
+
+class _BackButtonState extends State<_BackButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed != value) setState(() => _pressed = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: "Volver",
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => _setPressed(true),
+        onTapCancel: () => _setPressed(false),
+        onTapUp: (_) => _setPressed(false),
+        onTap: widget.onTap,
+        child: AnimatedScale(
+          scale: _pressed ? 0.92 : 1.0,
+          duration: const Duration(milliseconds: 110),
+          curve: Curves.easeOut,
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppTheme.primaryBlue.withOpacity(_pressed ? 0.18 : 0.10),
+            ),
+            child: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 18,
+              color: AppTheme.primaryBlue,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// _AboutMetrics — calcula tamaños, espacios y fuentes a partir del ancho
+// disponible, con clamp() en cada valor para que el diseño nunca se rompa
+// (ni en un celular muy chico ni en uno muy grande).
+// =============================================================================
+class _AboutMetrics {
+  final double outerPaddingH;
+  final double headerPaddingH;
+  final double headerPaddingTop;
+  final double headerPaddingBottom;
+  final double headerIconOuter;
+  final double headerIconInner;
+  final double headerIconSize;
+  final double headerTitleSize;
+  final double headerDescSize;
+  final double featureIconBox;
+  final double featureIconSize;
+  final double featureTitleSize;
+  final double featureDescSize;
+  final double featureRowPadding;
+  final double featureGap;
+
+  _AboutMetrics._({
+    required this.outerPaddingH,
+    required this.headerPaddingH,
+    required this.headerPaddingTop,
+    required this.headerPaddingBottom,
+    required this.headerIconOuter,
+    required this.headerIconInner,
+    required this.headerIconSize,
+    required this.headerTitleSize,
+    required this.headerDescSize,
+    required this.featureIconBox,
+    required this.featureIconSize,
+    required this.featureTitleSize,
+    required this.featureDescSize,
+    required this.featureRowPadding,
+    required this.featureGap,
+  });
+
+  factory _AboutMetrics.of(BoxConstraints constraints) {
+    final double width =
+    constraints.maxWidth.isFinite ? constraints.maxWidth : 390.0;
+
+    // 390 ≈ ancho de referencia (celular mediano).
+    final double scale = _clampD(width / 390.0, 0.82, 1.30);
+    final bool isCompactWidth = width < 360;
+
+    final double headerIconOuter = _clampD(92.0 * scale, 80.0, 108.0);
+
+    return _AboutMetrics._(
+      outerPaddingH: isCompactWidth ? 16.0 : 22.0,
+      headerPaddingH: _clampD(26.0 * scale, 18.0, 30.0),
+      headerPaddingTop: _clampD(34.0 * scale, 26.0, 40.0),
+      headerPaddingBottom: _clampD(30.0 * scale, 22.0, 34.0),
+      headerIconOuter: headerIconOuter,
+      headerIconInner: headerIconOuter * 0.67,
+      headerIconSize: headerIconOuter * 0.33,
+      headerTitleSize: _clampD(24.0 * scale, 21.0, 27.0),
+      headerDescSize: _clampD(15.5 * scale, 14.0, 17.0),
+      featureIconBox: _clampD(54.0 * scale, 48.0, 60.0),
+      featureIconSize: _clampD(27.0 * scale, 24.0, 30.0),
+      featureTitleSize: _clampD(19.5 * scale, 17.5, 21.5),
+      featureDescSize: _clampD(16.0 * scale, 14.5, 17.5),
+      featureRowPadding: _clampD(20.0 * scale, 15.0, 22.0),
+      featureGap: isCompactWidth ? 12.0 : 16.0,
     );
   }
 }

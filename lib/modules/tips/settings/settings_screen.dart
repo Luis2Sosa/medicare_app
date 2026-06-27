@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:medicare_app/core/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -9,9 +12,68 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  double fontSize = 1.0;
   bool soundEnabled = true;
   bool vibrationEnabled = true;
+  bool hasRatedApp = false;
+
+  static const String _ratedKey = 'hasRatedMediCare';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRatedState();
+  }
+
+  Future<void> _loadRatedState() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      hasRatedApp = prefs.getBool(_ratedKey) ?? false;
+    });
+  }
+
+  Future<void> _rateApp() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    const packageName = 'com.sosatechlab.medicare_app';
+
+    final playStoreUri = Uri.parse(
+      'market://details?id=$packageName',
+    );
+
+    final webUri = Uri.parse(
+      'https://play.google.com/store/apps/details?id=$packageName',
+    );
+
+    try {
+      if (await canLaunchUrl(playStoreUri)) {
+        await launchUrl(playStoreUri);
+      } else {
+        await launchUrl(
+          webUri,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+
+      await prefs.setBool(_ratedKey, true);
+
+      if (!mounted) return;
+
+      setState(() {
+        hasRatedApp = true;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No se pudo abrir Google Play. Inténtalo más tarde.',
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,22 +104,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 28),
+
                 Expanded(
                   child: ListView(
                     children: [
-                      _settingCard(
-                        icon: Icons.text_fields_rounded,
-                        title: 'Tamaño de letra',
-                        subtitle: _fontSizeText(),
-                        onTap: () {
-                          _showFontSizeDialog(context);
-                        },
-                      ),
                       _switchCard(
                         icon: Icons.volume_up_rounded,
                         title: 'Sonido',
-                        subtitle: soundEnabled ? 'Sonido activado' : 'Sonido desactivado',
+                        subtitle: soundEnabled
+                            ? 'Sonido activado'
+                            : 'Sonido desactivado',
                         value: soundEnabled,
                         onChanged: (value) {
                           setState(() {
@@ -65,10 +123,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           });
                         },
                       ),
+
                       _switchCard(
                         icon: Icons.vibration_rounded,
                         title: 'Vibración',
-                        subtitle: vibrationEnabled ? 'Vibración activada' : 'Vibración desactivada',
+                        subtitle: vibrationEnabled
+                            ? 'Vibración activada'
+                            : 'Vibración desactivada',
                         value: vibrationEnabled,
                         onChanged: (value) {
                           setState(() {
@@ -76,10 +137,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           });
                         },
                       ),
-                      const SizedBox(height: 10),
+
+                      _exitCard(context),
+
+                      const SizedBox(height: 8),
+
                       _privacyInfoCard(),
-                      const SizedBox(height: 24),
-                      _rateAppBanner(context),
+
+                      const SizedBox(height: 22),
+
+                      hasRatedApp
+                          ? _thanksBanner()
+                          : _rateAppBanner(context),
                     ],
                   ),
                 ),
@@ -88,98 +157,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  String _fontSizeText() {
-    if (fontSize < 0.9) return 'Letra pequeña';
-    if (fontSize < 1.2) return 'Letra normal';
-    if (fontSize < 1.5) return 'Letra grande';
-    return 'Letra muy grande';
-  }
-
-  void _showFontSizeDialog(BuildContext context) {
-    double tempFontSize = fontSize;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-              title: const Text(
-                'Tamaño de letra',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF1E3A5F),
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Texto de ejemplo',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 22 * tempFontSize,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF1E3A5F),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Slider(
-                    value: tempFontSize,
-                    min: 0.8,
-                    max: 1.6,
-                    divisions: 4,
-                    activeColor: const Color(0xFF1976D2),
-                    onChanged: (value) {
-                      setDialogState(() {
-                        tempFontSize = value;
-                      });
-                    },
-                  ),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Pequeña'),
-                      Text('Grande'),
-                    ],
-                  ),
-                ],
-              ),
-              actionsAlignment: MainAxisAlignment.center,
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      fontSize = tempFontSize;
-                    });
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1976D2),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text(
-                    'Guardar',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 
@@ -209,35 +186,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _settingCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: onTap,
-          child: _cardContent(
-            icon: icon,
-            title: title,
-            subtitle: subtitle,
-            trailing: const Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: Color(0xFF94A3B8),
-              size: 20,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _switchCard({
     required IconData icon,
     required String title,
@@ -250,84 +198,150 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        child: _cardContent(
-          icon: icon,
-          title: title,
-          subtitle: subtitle,
-          trailing: Switch(
-            value: value,
-            activeColor: const Color(0xFF1976D2),
-            onChanged: onChanged,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: const Color(0xFFD7EAFB),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE3F2FD),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: const Color(0xFF1976D2),
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF1E3A5F),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: value,
+                activeColor: const Color(0xFF1976D2),
+                onChanged: onChanged,
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _cardContent({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Widget trailing,
-  }) {
+  Widget _exitCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      decoration: BoxDecoration(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Material(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFD7EAFB),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE3F2FD),
-              shape: BoxShape.circle,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () {
+            SystemNavigator.pop();
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: const Color(0xFFD7EAFB),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF1976D2),
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 21 * fontSize,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF1E3A5F),
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFFEBEE),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Color(0xFFE53935),
+                    size: 30,
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 16 * fontSize,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF64748B),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Salir',
+                        style: TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF1E3A5F),
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Salir de MediCare',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Color(0xFF94A3B8),
+                  size: 20,
                 ),
               ],
             ),
           ),
-          trailing,
-        ],
+        ),
       ),
     );
   }
@@ -370,57 +384,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _rateAppBanner(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E88E5),
-        borderRadius: BorderRadius.circular(22),
+        color: Colors.white.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.90),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.star_rounded,
-            color: Colors.white,
-            size: 38,
+          const Text(
+            '⭐⭐⭐⭐⭐',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 26,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            '¿Qué te parece MediCare?',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1E3A5F),
+            ),
           ),
           const SizedBox(height: 8),
           const Text(
-            '¿Te gusta MediCare?',
+            'Tu opinión nos ayuda a mejorar y a que más personas descubran la aplicación.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Califica la aplicación en Google Play y ayuda a que más personas la descubran.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
+              fontSize: 15,
               height: 1.35,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF64748B),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            height: 46,
+            height: 48,
             child: ElevatedButton.icon(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text(
-                      'Aquí abriremos Google Play más adelante.',
+                      'Esta función estará disponible cuando MediCare sea publicada en Google Play.',
                     ),
+                    duration: Duration(seconds: 3),
                   ),
                 );
               },
@@ -432,18 +454,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Calificar aplicación',
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF1976D2),
+                backgroundColor: const Color(0xFF1976D2),
+                foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _thanksBanner() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.90),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: const Column(
+        children: [
+          Icon(
+            Icons.favorite_rounded,
+            color: Color(0xFFE53935),
+            size: 46,
+          ),
+          SizedBox(height: 10),
+          Text(
+            '¡Muchas gracias!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1E3A5F),
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Gracias por apoyar MediCare. Tu valoración nos ayuda a seguir mejorando la aplicación.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.35,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF64748B),
+            ),
+          ),
+          SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.check_circle_rounded,
+                color: Color(0xFF10B981),
+                size: 24,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Aplicación calificada',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF10B981),
+                ),
+              ),
+            ],
           ),
         ],
       ),
