@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
 import 'package:medicare_app/core/database/app_database.dart';
 import 'package:medicare_app/modules/treatments/screens/treatment_form_screen.dart';
+import 'package:medicare_app/services/notification_service.dart';
 
 
 class TreatmentListScreen extends StatefulWidget {
@@ -770,6 +771,13 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     final deleted = treatments[index];
 
     await AppDatabase.instance.deleteTreatment(deleted['id']);
+    try {
+      await NotificationService.instance.cancelReminder(
+        deleted['id'] as int,
+      );
+    } catch (e) {
+      debugPrint("Error cancelando alarma: $e");
+    }
 
     await _loadTreatments();
 
@@ -823,6 +831,13 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
     if (nuevaCantidad == 0) {
       await AppDatabase.instance.deleteTreatment(treatment['id']);
+      try {
+        await NotificationService.instance.cancelReminder(
+          treatment['id'] as int,
+        );
+      } catch (e) {
+        debugPrint("Error cancelando alarma: $e");
+      }
     } else {
       final updatedTreatment = {
         'id': treatment['id'],
@@ -834,6 +849,17 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
       };
 
       await AppDatabase.instance.updateTreatment(updatedTreatment);
+
+      try {
+        await NotificationService.instance.scheduleReminder(
+          id: treatment['id'] as int,
+          medicationName: treatment['name'] as String,
+          dosis: treatment['dosis'] as String,
+          horaTexto: nuevaHora,
+        );
+      } catch (e) {
+        debugPrint("Error reprogramando alarma: $e");
+      }
     }
 
     await _loadTreatments();
@@ -931,6 +957,17 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     };
 
     await AppDatabase.instance.updateTreatment(updatedTreatment);
+
+    try {
+      await NotificationService.instance.scheduleReminder(
+        id: treatment['id'] as int,
+        medicationName: treatment['name'] as String,
+        dosis: treatment['dosis'] as String,
+        horaTexto: nuevaHora,
+      );
+    } catch (e) {
+      debugPrint("Error reprogramando alarma: $e");
+    }
 
     await _loadTreatments();
 

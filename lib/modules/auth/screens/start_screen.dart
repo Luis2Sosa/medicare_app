@@ -23,6 +23,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:medicare_app/core/app_theme.dart';
+import 'package:medicare_app/services/notification_service.dart';
 
 /// Helper para evitar el problema clásico de Dart donde `num.clamp(...)`
 /// devuelve `num` en vez de `double` y rompe la compilación al asignarlo
@@ -443,7 +444,13 @@ class _StartScreenState extends State<StartScreen>
     return _PressableScale(
       semanticsLabel:
       "Comenzar. Entrar a la aplicación sin necesidad de registro",
-      onTap: () => Navigator.pushReplacementNamed(context, "/home"),
+      onTap: () async {
+        await NotificationService.instance.requestPermissions();
+
+        if (!context.mounted) return;
+
+        Navigator.pushReplacementNamed(context, "/home");
+      },
       builder: (pressed) {
         return Container(
           width: double.infinity,

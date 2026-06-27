@@ -16,20 +16,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool vibrationEnabled = true;
   bool hasRatedApp = false;
 
+  static const String _soundKey = 'soundEnabled';
+  static const String _vibrationKey = 'vibrationEnabled';
   static const String _ratedKey = 'hasRatedMediCare';
 
   @override
   void initState() {
     super.initState();
-    _loadRatedState();
+    _loadPreferences();
   }
 
-  Future<void> _loadRatedState() async {
+  Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
 
     setState(() {
+      soundEnabled = prefs.getBool(_soundKey) ?? true;
+      vibrationEnabled = prefs.getBool(_vibrationKey) ?? true;
       hasRatedApp = prefs.getBool(_ratedKey) ?? false;
     });
+  }
+
+  Future<void> _saveSoundPreference(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_soundKey, value);
+
+    if (vibrationEnabled) {
+      _triggerVibration();
+    }
+  }
+
+  Future<void> _saveVibrationPreference(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_vibrationKey, value);
+
+    if (value) {
+      _triggerVibration();
+    }
+  }
+
+  Future<void> _triggerVibration() async {
+    try {
+      await HapticFeedback.lightImpact();
+    } catch (e) {
+      // Vibration not available
+    }
   }
 
   Future<void> _rateApp() async {
@@ -77,6 +107,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 400;
+
     return Container(
       decoration: const BoxDecoration(
         gradient: AppTheme.mainGradient,
@@ -85,27 +118,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+            padding: EdgeInsets.fromLTRB(
+              isSmallScreen ? 16 : 22,
+              isSmallScreen ? 16 : 24,
+              isSmallScreen ? 16 : 22,
+              isSmallScreen ? 16 : 22,
+            ),
             child: Column(
               children: [
                 Row(
                   children: [
-                    _backButton(context),
-                    const SizedBox(width: 14),
-                    const Expanded(
+                    _backButton(context, isSmallScreen),
+                    SizedBox(width: isSmallScreen ? 10 : 14),
+                    Expanded(
                       child: Text(
                         'Configuración',
                         style: TextStyle(
-                          fontSize: 30,
+                          fontSize: isSmallScreen ? 24 : 30,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFF1E3A5F),
+                          color: const Color(0xFF1E3A5F),
                         ),
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 28),
+                SizedBox(height: isSmallScreen ? 20 : 28),
 
                 Expanded(
                   child: ListView(
@@ -117,10 +155,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? 'Sonido activado'
                             : 'Sonido desactivado',
                         value: soundEnabled,
+                        isSmallScreen: isSmallScreen,
                         onChanged: (value) {
                           setState(() {
                             soundEnabled = value;
                           });
+                          _saveSoundPreference(value);
                         },
                       ),
 
@@ -131,24 +171,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? 'Vibración activada'
                             : 'Vibración desactivada',
                         value: vibrationEnabled,
+                        isSmallScreen: isSmallScreen,
                         onChanged: (value) {
                           setState(() {
                             vibrationEnabled = value;
                           });
+                          _saveVibrationPreference(value);
                         },
                       ),
 
-                      _exitCard(context),
+                      _exitCard(context, isSmallScreen),
 
-                      const SizedBox(height: 8),
+                      SizedBox(height: isSmallScreen ? 6 : 8),
 
-                      _privacyInfoCard(),
+                      _privacyInfoCard(isSmallScreen),
 
-                      const SizedBox(height: 22),
+                      SizedBox(height: isSmallScreen ? 16 : 22),
 
                       hasRatedApp
-                          ? _thanksBanner()
-                          : _rateAppBanner(context),
+                          ? _thanksBanner(isSmallScreen)
+                          : _rateAppBanner(context, isSmallScreen),
                     ],
                   ),
                 ),
@@ -160,15 +202,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _backButton(BuildContext context) {
+  Widget _backButton(BuildContext context, bool isSmallScreen) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
         Navigator.pop(context);
       },
       child: Container(
-        width: 48,
-        height: 48,
+        width: isSmallScreen ? 40 : 48,
+        height: isSmallScreen ? 40 : 48,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -177,10 +219,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             width: 2,
           ),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.arrow_back_rounded,
-          color: Color(0xFF1976D2),
-          size: 28,
+          color: const Color(0xFF1976D2),
+          size: isSmallScreen ? 20 : 28,
         ),
       ),
     );
@@ -191,15 +233,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required String subtitle,
     required bool value,
+    required bool isSmallScreen,
     required ValueChanged<bool> onChanged,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: isSmallScreen ? 12 : 16),
       child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 14 : 18,
+            vertical: isSmallScreen ? 14 : 18,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
@@ -217,8 +263,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Row(
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: isSmallScreen ? 44 : 54,
+                height: isSmallScreen ? 44 : 54,
                 decoration: const BoxDecoration(
                   color: Color(0xFFE3F2FD),
                   shape: BoxShape.circle,
@@ -226,38 +272,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Icon(
                   icon,
                   color: const Color(0xFF1976D2),
-                  size: 30,
+                  size: isSmallScreen ? 22 : 30,
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: isSmallScreen ? 12 : 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 21,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 17 : 21,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF1E3A5F),
+                        color: const Color(0xFF1E3A5F),
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    SizedBox(height: isSmallScreen ? 3 : 5),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 13 : 16,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF64748B),
+                        color: const Color(0xFF64748B),
                       ),
                     ),
                   ],
                 ),
               ),
-              Switch(
-                value: value,
-                activeColor: const Color(0xFF1976D2),
-                onChanged: onChanged,
+              Transform.scale(
+                scale: isSmallScreen ? 0.8 : 1.0,
+                child: Switch(
+                  value: value,
+                  activeColor: const Color(0xFF1976D2),
+                  onChanged: onChanged,
+                ),
               ),
             ],
           ),
@@ -266,9 +315,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _exitCard(BuildContext context) {
+  Widget _exitCard(BuildContext context, bool isSmallScreen) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: isSmallScreen ? 12 : 16),
       child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -278,7 +327,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SystemNavigator.pop();
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 14 : 18,
+              vertical: isSmallScreen ? 14 : 18,
+            ),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
@@ -296,38 +348,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Row(
               children: [
                 Container(
-                  width: 54,
-                  height: 54,
+                  width: isSmallScreen ? 44 : 54,
+                  height: isSmallScreen ? 44 : 54,
                   decoration: const BoxDecoration(
                     color: Color(0xFFFFEBEE),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.logout_rounded,
-                    color: Color(0xFFE53935),
-                    size: 30,
+                    color: const Color(0xFFE53935),
+                    size: isSmallScreen ? 22 : 30,
                   ),
                 ),
-                const SizedBox(width: 16),
-                const Expanded(
+                SizedBox(width: isSmallScreen ? 12 : 16),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Salir',
                         style: TextStyle(
-                          fontSize: 21,
+                          fontSize: isSmallScreen ? 17 : 21,
                           fontWeight: FontWeight.w900,
-                          color: Color(0xFF1E3A5F),
+                          color: const Color(0xFF1E3A5F),
                         ),
                       ),
-                      SizedBox(height: 5),
+                      SizedBox(height: isSmallScreen ? 3 : 5),
                       Text(
                         'Salir de MediCare',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: isSmallScreen ? 13 : 16,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF64748B),
+                          color: const Color(0xFF64748B),
                         ),
                       ),
                     ],
@@ -335,8 +387,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
-                  color: Color(0xFF94A3B8),
-                  size: 20,
+                  color: const Color(0xFF94A3B8),
+                  size: isSmallScreen ? 16 : 20,
                 ),
               ],
             ),
@@ -346,9 +398,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _privacyInfoCard() {
+  Widget _privacyInfoCard(bool isSmallScreen) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(isSmallScreen ? 14 : 18),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.70),
         borderRadius: BorderRadius.circular(22),
@@ -357,23 +409,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 1.5,
         ),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             Icons.lock_rounded,
-            color: Color(0xFF1976D2),
-            size: 28,
+            color: const Color(0xFF1976D2),
+            size: isSmallScreen ? 22 : 28,
           ),
-          SizedBox(width: 14),
+          SizedBox(width: isSmallScreen ? 10 : 14),
           Expanded(
             child: Text(
               'Tus medicamentos se guardan de forma local en este dispositivo.',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: isSmallScreen ? 14 : 16,
                 height: 1.35,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF1E3A5F),
+                color: const Color(0xFF1E3A5F),
               ),
             ),
           ),
@@ -382,9 +434,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _rateAppBanner(BuildContext context) {
+  Widget _rateAppBanner(BuildContext context, bool isSmallScreen) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(isSmallScreen ? 14 : 18),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(24),
@@ -402,58 +454,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       child: Column(
         children: [
-          const Text(
+          Text(
             '⭐⭐⭐⭐⭐',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 26,
+              fontSize: isSmallScreen ? 20 : 26,
               letterSpacing: 2,
             ),
           ),
-          const SizedBox(height: 10),
-          const Text(
+          SizedBox(height: isSmallScreen ? 8 : 10),
+          Text(
             '¿Qué te parece MediCare?',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: isSmallScreen ? 16 : 20,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF1E3A5F),
+              color: const Color(0xFF1E3A5F),
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: isSmallScreen ? 6 : 8),
+          Text(
             'Tu opinión nos ayuda a mejorar y a que más personas descubran la aplicación.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: isSmallScreen ? 13 : 15,
               height: 1.35,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF64748B),
+              color: const Color(0xFF64748B),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isSmallScreen ? 12 : 16),
           SizedBox(
             width: double.infinity,
-            height: 48,
+            height: isSmallScreen ? 42 : 48,
             child: ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Esta función estará disponible cuando MediCare sea publicada en Google Play.',
-                    ),
-                    duration: Duration(seconds: 3),
-                  ),
-                );
-              },
-              icon: const Icon(
+              onPressed: _rateApp,
+              icon: Icon(
                 Icons.star_rate_rounded,
-                size: 20,
+                size: isSmallScreen ? 16 : 20,
               ),
-              label: const Text(
+              label: Text(
                 'Calificar aplicación',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: isSmallScreen ? 14 : 16,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -472,9 +515,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _thanksBanner() {
+  Widget _thanksBanner(bool isSmallScreen) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(isSmallScreen ? 14 : 18),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(24),
@@ -490,50 +533,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-      child: const Column(
+      child: Column(
         children: [
           Icon(
             Icons.favorite_rounded,
-            color: Color(0xFFE53935),
-            size: 46,
+            color: const Color(0xFFE53935),
+            size: isSmallScreen ? 36 : 46,
           ),
-          SizedBox(height: 10),
+          SizedBox(height: isSmallScreen ? 8 : 10),
           Text(
             '¡Muchas gracias!',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 22,
+              fontSize: isSmallScreen ? 18 : 22,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF1E3A5F),
+              color: const Color(0xFF1E3A5F),
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: isSmallScreen ? 6 : 8),
           Text(
             'Gracias por apoyar MediCare. Tu valoración nos ayuda a seguir mejorando la aplicación.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: isSmallScreen ? 13 : 15,
               height: 1.35,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF64748B),
+              color: const Color(0xFF64748B),
             ),
           ),
-          SizedBox(height: 14),
+          SizedBox(height: isSmallScreen ? 10 : 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.check_circle_rounded,
-                color: Color(0xFF10B981),
-                size: 24,
+                color: const Color(0xFF10B981),
+                size: isSmallScreen ? 20 : 24,
               ),
-              SizedBox(width: 8),
+              SizedBox(width: isSmallScreen ? 6 : 8),
               Text(
                 'Aplicación calificada',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: isSmallScreen ? 14 : 16,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF10B981),
+                  color: const Color(0xFF10B981),
                 ),
               ),
             ],

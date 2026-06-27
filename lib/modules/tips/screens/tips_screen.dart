@@ -32,7 +32,7 @@ class TipsScreen extends StatelessWidget {
     _HealthTip(Icons.local_drink_rounded, 'Agua cerca', 'Mantén un vaso o botella de agua cerca para recordar hidratarte.'),
     _HealthTip(Icons.sentiment_satisfied_rounded, 'Cuida tu ánimo', 'Si te sientes triste o solo, habla con alguien de confianza. No estás solo.'),
     _HealthTip(Icons.healing_rounded, 'No suspendas tratamientos', 'No dejes un medicamento sin hablar primero con tu médico.'),
-    _HealthTip(Icons.wb_sunny_rounded, 'Toma aire fresco', 'Si puedes, sal unos minutos a tomar aire fresco en un lugar seguro.'),
+    _HealthTip(Icons.wb_sunny_rounded, 'Toma aire fresco', 'Si puedes, sal unos minutos a tomar aire fresca en un lugar seguro.'),
     _HealthTip(Icons.check_circle_rounded, 'Celebra tus avances', 'Cada día que cuidas tu salud es un logro importante.'),
     _HealthTip(Icons.volunteer_activism_rounded, 'Cuídate con amor', 'Tu salud es valiosa. Cuidarte cada día también es una forma de quererte.'),
   ];
@@ -46,6 +46,9 @@ class TipsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 400;
+
     final tip = tips[todayIndex];
 
     return Container(
@@ -55,109 +58,121 @@ class TipsScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 40, 22, 22),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
+              isSmallScreen ? 16 : 22,
+              isSmallScreen ? 28 : 40,
+              isSmallScreen ? 16 : 22,
+              isSmallScreen ? 16 : 22,
+            ),
             child: Column(
               children: [
-                const Text(
+                Text(
                   'Consejos de salud',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 30,
+                    fontSize: isSmallScreen ? 24 : 30,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF1E3A5F),
+                    color: const Color(0xFF1E3A5F),
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: isSmallScreen ? 6 : 8),
+                Text(
                   'Un consejo nuevo cada día',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: isSmallScreen ? 14 : 18,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF64748B),
+                    color: const Color(0xFF64748B),
                   ),
                 ),
-                const SizedBox(height: 28),
+                SizedBox(height: isSmallScreen ? 20 : 28),
 
-                Expanded(
-                  child: Center(
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(28),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(34),
-                        border: Border.all(
-                          color: const Color(0xFFD7EAFB),
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.07),
-                            blurRadius: 24,
-                            offset: const Offset(0, 12),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE3F2FD),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              tip.icon,
-                              size: 82,
-                              color: const Color(0xFF1976D2),
-                            ),
-                          ),
-                          const SizedBox(height: 28),
-                          Text(
-                            tip.title,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF1E3A5F),
-                            ),
-                          ),
-                          const SizedBox(height: 22),
-                          Text(
-                            tip.message,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              height: 1.38,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF334155),
-                            ),
-                          ),
-                        ],
-                      ),
+                // TIP CARD
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(isSmallScreen ? 20 : 28),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(34),
+                    border: Border.all(
+                      color: const Color(0xFFD7EAFB),
+                      width: 2,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.07),
+                        blurRadius: 24,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ICON
+                      Container(
+                        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE3F2FD),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          tip.icon,
+                          size: isSmallScreen ? 60 : 82,
+                          color: const Color(0xFF1976D2),
+                        ),
+                      ),
+                      SizedBox(height: isSmallScreen ? 20 : 28),
+
+                      // TITLE
+                      Text(
+                        tip.title,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 24 : 32,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF1E3A5F),
+                        ),
+                      ),
+                      SizedBox(height: isSmallScreen ? 16 : 22),
+
+                      // MESSAGE
+                      Text(
+                        tip.message,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 16 : 24,
+                          height: 1.38,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF334155),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                SizedBox(height: isSmallScreen ? 12 : 12),
 
-                _settingsButton(context),
+                // SETTINGS BUTTON
+                _settingsButton(context, isSmallScreen),
 
-                const SizedBox(height: 16),
+                SizedBox(height: isSmallScreen ? 12 : 16),
 
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 25),
+                // FOOTER TEXT
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: isSmallScreen ? 16 : 25,
+                  ),
                   child: Text(
                     'Recuerda seguir siempre las indicaciones de tu médico.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: isSmallScreen ? 13 : 16,
                       height: 1.3,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF64748B),
+                      color: const Color(0xFF64748B),
                     ),
                   ),
                 ),
@@ -169,28 +184,28 @@ class TipsScreen extends StatelessWidget {
     );
   }
 
-  Widget _settingsButton(BuildContext context) {
+  Widget _settingsButton(BuildContext context, bool isSmallScreen) {
     return SizedBox(
       width: double.infinity,
-      height: 58,
+      height: isSmallScreen ? 48 : 58,
       child: ElevatedButton.icon(
         onPressed: () {
           Navigator.pushNamed(context, '/settings');
         },
-        icon: const Icon(
+        icon: Icon(
           Icons.settings_rounded,
-          size: 26,
+          size: isSmallScreen ? 20 : 26,
         ),
-        label: const Text(
+        label: Text(
           'Configuración',
           style: TextStyle(
-            fontSize: 20,
+            fontSize: isSmallScreen ? 16 : 20,
             fontWeight: FontWeight.w800,
           ),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
-          foregroundColor: Color(0xFF1976D2),
+          foregroundColor: const Color(0xFF1976D2),
           elevation: 4,
           shadowColor: Colors.black26,
           shape: RoundedRectangleBorder(
