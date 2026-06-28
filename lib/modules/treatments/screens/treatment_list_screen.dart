@@ -772,7 +772,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
     await AppDatabase.instance.deleteTreatment(deleted['id']);
     try {
-      await NotificationService.instance.cancelReminder(
+      await NotificationService.instance.cancelRemindersForTreatment(
         deleted['id'] as int,
       );
     } catch (e) {
@@ -814,11 +814,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
       nuevaCantidad = 0;
     }
 
-    final nuevaHora = _calculateNextTime(
-      treatment['hora'],
-      treatment['frecuencia'],
-    );
-
     final historyItem = {
       'medicamento': treatment['name'],
       'dosis': treatment['dosis'],
@@ -832,7 +827,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     if (nuevaCantidad == 0) {
       await AppDatabase.instance.deleteTreatment(treatment['id']);
       try {
-        await NotificationService.instance.cancelReminder(
+        await NotificationService.instance.cancelRemindersForTreatment(
           treatment['id'] as int,
         );
       } catch (e) {
@@ -844,21 +839,24 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
         'name': treatment['name'],
         'dosis': treatment['dosis'],
         'frecuencia': treatment['frecuencia'],
-        'hora': nuevaHora,
+        'hora': treatment['hora'],
         'cantidad': nuevaCantidad,
       };
 
       await AppDatabase.instance.updateTreatment(updatedTreatment);
 
       try {
-        await NotificationService.instance.scheduleReminder(
-          id: treatment['id'] as int,
+        // Apaga la alarma de esta dosis y la reprograma para la
+        // siguiente toma (normalmente mañana, a la misma hora).
+        await NotificationService.instance.acknowledgeDose(
+          treatmentId: treatment['id'] as int,
+          horaInicio: treatment['hora'] as String,
+          frecuencia: treatment['frecuencia'] as String,
           medicationName: treatment['name'] as String,
           dosis: treatment['dosis'] as String,
-          horaTexto: nuevaHora,
         );
       } catch (e) {
-        debugPrint("Error reprogramando alarma: $e");
+        debugPrint("Error reconociendo dosis: $e");
       }
     }
 
@@ -871,7 +869,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
         content: Text(
           nuevaCantidad == 0
               ? "${treatment['name']} completado"
-              : "Próxima toma: $nuevaHora",
+              : "¡Buen trabajo! Quedan $nuevaCantidad",
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -883,59 +881,8 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     );
   }
 
-  String _calculateNextTime(String currentTime, String frecuencia) {
-    int hoursToAdd = 8;
-
-    if (frecuencia == "Cada 4 horas") {
-      hoursToAdd = 4;
-    } else if (frecuencia == "Cada 6 horas") {
-      hoursToAdd = 6;
-    } else if (frecuencia == "Cada 8 horas") {
-      hoursToAdd = 8;
-    } else if (frecuencia == "Cada 12 horas") {
-      hoursToAdd = 12;
-    } else if (frecuencia == "Cada 24 horas") {
-      hoursToAdd = 24;
-    }
-
-    final parts = currentTime.split(' ');
-    final timeParts = parts[0].split(':');
-
-    int hour = int.parse(timeParts[0]);
-    int minute = int.parse(timeParts[1]);
-    final period = parts[1];
-
-    if (period == 'PM' && hour != 12) {
-      hour += 12;
-    }
-
-    if (period == 'AM' && hour == 12) {
-      hour = 0;
-    }
-
-    final baseTime = DateTime(2026, 1, 1, hour, minute);
-    final nextTime = baseTime.add(Duration(hours: hoursToAdd));
-
-    final newHour24 = nextTime.hour;
-    final newMinute = nextTime.minute.toString().padLeft(2, '0');
-
-    final newPeriod = newHour24 >= 12 ? 'PM' : 'AM';
-    int newHour12 = newHour24 % 12;
-
-    if (newHour12 == 0) {
-      newHour12 = 12;
-    }
-
-    return '$newHour12:$newMinute $newPeriod';
-  }
-
   void _markAsSkipped(Map<String, dynamic> treatment) async {
     final now = DateTime.now();
-
-    final nuevaHora = _calculateNextTime(
-      treatment['hora'],
-      treatment['frecuencia'],
-    );
 
     final historyItem = {
       'medicamento': treatment['name'],
@@ -947,26 +894,18 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
     await AppDatabase.instance.insertHistory(historyItem);
 
-    final updatedTreatment = {
-      'id': treatment['id'],
-      'name': treatment['name'],
-      'dosis': treatment['dosis'],
-      'frecuencia': treatment['frecuencia'],
-      'hora': nuevaHora,
-      'cantidad': treatment['cantidad'],
-    };
-
-    await AppDatabase.instance.updateTreatment(updatedTreatment);
-
     try {
-      await NotificationService.instance.scheduleReminder(
-        id: treatment['id'] as int,
+      // Apaga la alarma de esta dosis (no la tiene cerca / no está en
+      // casa) y la reprograma para la siguiente toma.
+      await NotificationService.instance.acknowledgeDose(
+        treatmentId: treatment['id'] as int,
+        horaInicio: treatment['hora'] as String,
+        frecuencia: treatment['frecuencia'] as String,
         medicationName: treatment['name'] as String,
         dosis: treatment['dosis'] as String,
-        horaTexto: nuevaHora,
       );
     } catch (e) {
-      debugPrint("Error reprogramando alarma: $e");
+      debugPrint("Error reconociendo dosis: $e");
     }
 
     await _loadTreatments();
@@ -976,7 +915,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          "Omitido. Próxima toma: $nuevaHora",
+          "Dosis omitida. Sonará en la próxima toma.",
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,

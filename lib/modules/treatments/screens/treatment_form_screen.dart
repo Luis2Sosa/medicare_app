@@ -536,11 +536,12 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
       }
 
       try {
-        await NotificationService.instance.scheduleReminder(
-          id: finalId,
+        await NotificationService.instance.scheduleRemindersForTreatment(
+          treatmentId: finalId,
           medicationName: nombreFinal,
           dosis: dosis,
-          horaTexto: horaFormateada,
+          horaInicio: horaFormateada,
+          frecuencia: frecuencia,
         );
       } catch (e) {
         debugPrint("Error programando notificación: $e");

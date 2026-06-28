@@ -15,6 +15,7 @@ void main() async {
 
   try {
     await NotificationService.instance.init();
+    await NotificationService.instance.requestPermissions();
   } catch (e) {
     debugPrint("Error iniciando notificaciones: $e");
   }
@@ -24,11 +25,12 @@ void main() async {
 
     for (final t in treatments) {
       try {
-        await NotificationService.instance.scheduleReminder(
-          id: t['id'] as int,
+        await NotificationService.instance.scheduleRemindersForTreatment(
+          treatmentId: t['id'] as int,
           medicationName: t['name'] as String,
           dosis: t['dosis'] as String,
-          horaTexto: t['hora'] as String,
+          horaInicio: t['hora'] as String,
+          frecuencia: t['frecuencia'] as String,
         );
       } catch (e) {
         debugPrint("Error reprogramando alarma: $e");
