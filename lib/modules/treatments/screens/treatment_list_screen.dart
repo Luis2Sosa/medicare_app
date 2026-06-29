@@ -4,7 +4,6 @@ import 'package:medicare_app/core/database/app_database.dart';
 import 'package:medicare_app/modules/treatments/screens/treatment_form_screen.dart';
 import 'package:medicare_app/services/notification_service.dart';
 
-
 class TreatmentListScreen extends StatefulWidget {
   const TreatmentListScreen({super.key});
 
@@ -33,21 +32,61 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     });
   }
 
+  String _getNextDoseTime(Map<String, dynamic> treatment) {
+    final String hora = treatment['hora'] ?? '12:00 AM';
+    final String frecuencia = treatment['frecuencia'] ?? 'Cada 24 horas';
 
-  final List<Map<String, dynamic>> _mockTreatments = [
-    {
-      'name': 'Amoxicilina',
-      'dosis': '1 tableta',
-      'frecuencia': 'Cada 8 horas',
-      'hora': '9:00 AM',
-    },
-    {
-      'name': 'Ibuprofeno',
-      'dosis': '1 tableta',
-      'frecuencia': 'Cada 12 horas',
-      'hora': '3:00 PM',
-    },
-  ];
+    final int startMinutes = _parseHoraATotalMinutos(hora);
+    final int intervalHours = _parseFrecuenciaHoras(frecuencia);
+    final int intervalMinutes = intervalHours * 60;
+
+    final now = DateTime.now();
+    final int nowMinutes = now.hour * 60 + now.minute;
+
+    int nextMinutes = startMinutes;
+
+    for (int i = 0; i < 10; i++) {
+      if (nextMinutes > nowMinutes) {
+        return _formatMinutesToTime(nextMinutes);
+      }
+
+      nextMinutes = (startMinutes + ((i + 1) * intervalMinutes)) % (24 * 60);
+    }
+
+    return _formatMinutesToTime(startMinutes);
+  }
+
+  int _parseFrecuenciaHoras(String frecuencia) {
+    final match = RegExp(r'(\d+)').firstMatch(frecuencia);
+    if (match == null) return 24;
+    return int.tryParse(match.group(1)!) ?? 24;
+  }
+
+  int _parseHoraATotalMinutos(String horaTexto) {
+    final parts = horaTexto.trim().split(' ');
+    final timeParts = parts[0].split(':');
+
+    int hour = int.parse(timeParts[0]);
+    final int minute = int.parse(timeParts[1]);
+    final String period = parts.length > 1 ? parts[1].toUpperCase() : 'AM';
+
+    if (period == 'PM' && hour != 12) hour += 12;
+    if (period == 'AM' && hour == 12) hour = 0;
+
+    return hour * 60 + minute;
+  }
+
+  String _formatMinutesToTime(int totalMinutes) {
+    int hour24 = totalMinutes ~/ 60;
+    final int minute = totalMinutes % 60;
+
+    final String period = hour24 >= 12 ? 'PM' : 'AM';
+    int hour12 = hour24 % 12;
+
+    if (hour12 == 0) hour12 = 12;
+
+    return '$hour12:${minute.toString().padLeft(2, '0')} $period';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,16 +123,18 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
         ),
         body: isLoading
             ? _buildLoadingState()
-            : (data.isEmpty ? _emptyState(isSmallScreen) : _buildList(data, isSmallScreen)),
+            : (data.isEmpty
+            ? _emptyState(isSmallScreen)
+            : _buildList(data, isSmallScreen)),
         floatingActionButton: _addButton(),
       ),
     );
   }
 
   Widget _buildLoadingState() {
-    return Center(
+    return const Center(
       child: CircularProgressIndicator(
-        color: const Color(0xFF42A5F5),
+        color: Color(0xFF42A5F5),
         strokeWidth: 4,
       ),
     );
@@ -102,7 +143,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   Widget _buildList(List<Map<String, dynamic>> data, bool isSmallScreen) {
     return Column(
       children: [
-        // HEADER COMPACTO
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(
@@ -119,37 +159,28 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               end: Alignment.bottomCenter,
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "Recuerda tomar tu medicamento",
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 18 : 22,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF1E3A5F),
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "${data.length} ${data.length == 1 ? 'pendiente para hoy' : 'pendientes para hoy'}",
-                    style: TextStyle(
-                      fontSize: isSmallScreen ? 16 : 20,
-                      color: const Color(0xFF5B7C99),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+              Text(
+                "Recuerda tomar tu medicamento",
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 18 : 22,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF1E3A5F),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                "${data.length} ${data.length == 1 ? 'pendiente para hoy' : 'pendientes para hoy'}",
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 16 : 20,
+                  color: const Color(0xFF5B7C99),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
         ),
-
-        // LISTA CON MÁS ESPACIO
         Expanded(
           child: ListView.builder(
             padding: EdgeInsets.fromLTRB(
@@ -168,311 +199,261 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     );
   }
 
-  Widget _treatmentCard(Map<String, dynamic> treatment, int index, bool isSmallScreen) {
-    return GestureDetector(
-      onTap: () => _showOptions(treatment, index, isSmallScreen),
-      child: Container(
-        margin: EdgeInsets.only(bottom: isSmallScreen ? 14 : 18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: const Color(0xFF42A5F5),
-            width: 2.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF42A5F5).withOpacity(0.12),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
+  Widget _treatmentCard(
+      Map<String, dynamic> treatment,
+      int index,
+      bool isSmallScreen,
+      ) {
+    final String nextDoseTime = _getNextDoseTime(treatment);
+
+    return Container(
+      margin: EdgeInsets.only(bottom: isSmallScreen ? 14 : 18),
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F9FC),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: const Color(0xFF64B5F6),
+          width: 2.2,
         ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(24),
-            onTap: () => _showOptions(treatment, index, isSmallScreen),
-            child: Padding(
-              padding: EdgeInsets.all(isSmallScreen ? 14 : 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // HEADER CON NOMBRE MÁS GRANDE
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(isSmallScreen ? 10 : 16),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF42A5F5),
-                              Color(0xFF1E88E5),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF42A5F5).withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.medication_rounded,
-                          size: isSmallScreen ? 24 : 36,
-                          color: Colors.white,
-                        ),
+
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: isSmallScreen ? 54 : 64,
+                height: isSmallScreen ? 54 : 64,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE3F2FD),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(
+                  Icons.medication_rounded,
+                  color: const Color(0xFF1976D2),
+                  size: isSmallScreen ? 30 : 36,
+                ),
+              ),
+              SizedBox(width: isSmallScreen ? 12 : 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      treatment['name'] ?? 'Medicamento',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 22 : 26,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF1E3A5F),
                       ),
-                      SizedBox(width: isSmallScreen ? 12 : 18),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // ✅ NOMBRE MUCHO MÁS GRANDE
-                            Text(
-                              treatment['name'] ?? 'Medicamento',
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 20 : 28,
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF1E3A5F),
-                                letterSpacing: 0.2,
-                                height: 1.2,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: isSmallScreen ? 4 : 6),
-                            // ✅ DOSIS MÁS GRANDE Y NEGRA
-                            Text(
-                              treatment['dosis'] ?? '1 tableta',
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 14 : 19,
-                                color: const Color(0xFF1E3A5F),
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      treatment['dosis'] ?? '1 tableta',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 15 : 17,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF64748B),
                       ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isSmallScreen ? 8 : 12,
-                          vertical: isSmallScreen ? 6 : 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE3F2FD),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF42A5F5),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.settings,
-                              size: isSmallScreen ? 14 : 18,
-                              color: const Color(0xFF1565C0),
-                            ),
-                            SizedBox(width: isSmallScreen ? 4 : 6),
-                            Text(
-                              "Opciones",
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 12 : 14,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF1565C0),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => _showOptions(treatment, index, isSmallScreen),
+                child: Container(
+                  padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE3F2FD),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-
-                  SizedBox(height: isSmallScreen ? 14 : 20),
-
-                  // ✅ HORA MÁS GRANDE Y PROMINENTE
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isSmallScreen ? 14 : 20,
-                      vertical: isSmallScreen ? 10 : 14,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFFFFA726),
-                          Color(0xFFF57C00),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFFA726).withOpacity(0.35),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.access_time_rounded,
-                          color: Colors.white,
-                          size: isSmallScreen ? 24 : 32,
-                        ),
-                        SizedBox(width: isSmallScreen ? 10 : 14),
-                        Text(
-                          treatment['hora'] ?? '00:00 AM',
-                          style: TextStyle(
-                            fontSize: isSmallScreen ? 22 : 32,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: Icon(
+                    Icons.more_horiz_rounded,
+                    color: const Color(0xFF1976D2),
+                    size: isSmallScreen ? 22 : 26,
                   ),
+                ),
+              ),
+            ],
+          ),
 
-                  SizedBox(height: isSmallScreen ? 12 : 16),
+          SizedBox(height: isSmallScreen ? 18 : 22),
 
-                  // ✅ FRECUENCIA MÁS GRANDE
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isSmallScreen ? 14 : 18,
-                      vertical: isSmallScreen ? 10 : 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE3F2FD),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFF42A5F5),
-                        width: 2,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.repeat_rounded,
-                          size: isSmallScreen ? 20 : 26,
-                          color: const Color(0xFF1E88E5),
-                        ),
-                        SizedBox(width: isSmallScreen ? 8 : 12),
-                        Expanded(
-                          child: Text(
-                            treatment['frecuencia'] ?? 'Cada 8 horas',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 14 : 18,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1565C0),
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                        ),
-
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isSmallScreen ? 8 : 10,
-                            vertical: isSmallScreen ? 4 : 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFF42A5F5),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Text(
-                            "Quedan ${treatment['cantidad'] ?? 0}",
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 12 : 15,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF1565C0),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: isSmallScreen ? 12 : 16),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: isSmallScreen ? 44 : 58,
-                          child: ElevatedButton.icon(
-                            onPressed: () => _markAsTaken(treatment),
-                            icon: Icon(
-                              Icons.check_circle_rounded,
-                              size: isSmallScreen ? 20 : 28,
-                            ),
-                            label: Text(
-                              "Tomado",
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 14 : 19,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF10B981),
-                              foregroundColor: Colors.white,
-                              elevation: 5,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(width: isSmallScreen ? 8 : 12),
-
-                      Expanded(
-                        child: SizedBox(
-                          height: isSmallScreen ? 44 : 58,
-                          child: ElevatedButton.icon(
-                            onPressed: () => _markAsSkipped(treatment),
-                            icon: Icon(
-                              Icons.cancel_rounded,
-                              size: isSmallScreen ? 20 : 28,
-                            ),
-                            label: Text(
-                              "Omitir",
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 14 : 19,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFEF5350),
-                              foregroundColor: Colors.white,
-                              elevation: 5,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 16 : 18,
+              vertical: isSmallScreen ? 14 : 16,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFFFFB74D),
+                width: 1.5,
               ),
             ),
+            child: Row(
+              children: [
+                Container(
+                  width: isSmallScreen ? 42 : 48,
+                  height: isSmallScreen ? 42 : 48,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFF9800),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.access_time_rounded,
+                    color: Colors.white,
+                    size: isSmallScreen ? 24 : 28,
+                  ),
+                ),
+                SizedBox(width: isSmallScreen ? 12 : 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Próxima toma",
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 14 : 16,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFFB45309),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        nextDoseTime,
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 26 : 30,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF1E3A5F),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+
+          SizedBox(height: isSmallScreen ? 12 : 14),
+
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE3F2FD),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.repeat_rounded,
+                        color: Color(0xFF1976D2),
+                        size: 22,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          treatment['frecuencia'] ?? 'Cada 8 horas',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 14 : 16,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF1565C0),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  "Quedan ${treatment['cantidad'] ?? 0}",
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 14 : 16,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF1E3A5F),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: isSmallScreen ? 14 : 18),
+
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: isSmallScreen ? 48 : 54,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _markAsTaken(treatment),
+                    icon: const Icon(Icons.check_circle_rounded),
+                    label: const Text("Tomado"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      textStyle: TextStyle(
+                        fontSize: isSmallScreen ? 15 : 17,
+                        fontWeight: FontWeight.w900,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: isSmallScreen ? 48 : 54,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _markAsSkipped(treatment),
+                    icon: const Icon(Icons.cancel_rounded),
+                    label: const Text("Omitir"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF5350),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      textStyle: TextStyle(
+                        fontSize: isSmallScreen ? 15 : 17,
+                        fontWeight: FontWeight.w900,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -484,7 +465,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
         child: Padding(
           padding: EdgeInsets.all(isSmallScreen ? 24 : 40),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: isSmallScreen ? 40 : 60),
               Container(
@@ -499,10 +479,11 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF64B5F6).withOpacity(0.3),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
+                      color: const Color(0xFF64B5F6).withOpacity(0.18),
+                      blurRadius: 22,
+                      offset: const Offset(0, 10),
                     ),
+
                   ],
                 ),
                 child: Icon(
@@ -518,7 +499,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   fontSize: isSmallScreen ? 24 : 30,
                   fontWeight: FontWeight.w900,
                   color: const Color(0xFF1E3A5F),
-                  letterSpacing: 0.3,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -551,20 +531,23 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w900,
-          letterSpacing: 0.3,
         ),
       ),
       elevation: 8,
     );
   }
 
-  void _showOptions(Map<String, dynamic> treatment, int index, bool isSmallScreen) {
+  void _showOptions(
+      Map<String, dynamic> treatment,
+      int index,
+      bool isSmallScreen,
+      ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFFF8FAFC),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         padding: EdgeInsets.all(isSmallScreen ? 20 : 28),
@@ -580,7 +563,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               ),
             ),
             SizedBox(height: isSmallScreen ? 16 : 24),
-            // ✅ NOMBRE MÁS GRANDE EN EL MODAL
             Text(
               treatment['name'] ?? 'Medicamento',
               style: TextStyle(
@@ -592,12 +574,13 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
             ),
             SizedBox(height: isSmallScreen ? 6 : 8),
             Text(
-              "${treatment['dosis']} • ${treatment['hora']}",
+              "${treatment['dosis']} • Próxima toma: ${_getNextDoseTime(treatment)}",
               style: TextStyle(
                 fontSize: isSmallScreen ? 16 : 19,
                 color: const Color(0xFF5B7C99),
                 fontWeight: FontWeight.w700,
               ),
+              textAlign: TextAlign.center,
             ),
             SizedBox(height: isSmallScreen ? 24 : 32),
             _optionButton(
@@ -700,12 +683,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: EdgeInsets.fromLTRB(
-          isSmallScreen ? 20 : 28,
-          isSmallScreen ? 20 : 28,
-          isSmallScreen ? 20 : 28,
-          isSmallScreen ? 30 : 40,
-        ),
         title: Text(
           "¿Eliminar?",
           style: TextStyle(
@@ -727,40 +704,14 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 16 : 24,
-                vertical: isSmallScreen ? 10 : 14,
-              ),
-            ),
-            child: Text(
-              "No",
-              style: TextStyle(
-                fontSize: isSmallScreen ? 16 : 19,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF90A4AE),
-              ),
-            ),
+            child: const Text("No"),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _deleteTreatment(index);
             },
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFEF5350),
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmallScreen ? 16 : 24,
-                vertical: isSmallScreen ? 10 : 14,
-              ),
-            ),
-            child: Text(
-              "Sí, eliminar",
-              style: TextStyle(
-                fontSize: isSmallScreen ? 16 : 19,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+            child: const Text("Sí, eliminar"),
           ),
         ],
       ),
@@ -771,6 +722,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     final deleted = treatments[index];
 
     await AppDatabase.instance.deleteTreatment(deleted['id']);
+
     try {
       await NotificationService.instance.cancelRemindersForTreatment(
         deleted['id'] as int,
@@ -799,7 +751,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     final now = DateTime.now();
 
     int cantidadActual = treatment['cantidad'] ?? 0;
-
     int descuento = 1;
 
     if (treatment['dosis'] == "2 tabletas") {
@@ -826,6 +777,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
     if (nuevaCantidad == 0) {
       await AppDatabase.instance.deleteTreatment(treatment['id']);
+
       try {
         await NotificationService.instance.cancelRemindersForTreatment(
           treatment['id'] as int,
@@ -846,8 +798,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
       await AppDatabase.instance.updateTreatment(updatedTreatment);
 
       try {
-        // Apaga la alarma de esta dosis y la reprograma para la
-        // siguiente toma (normalmente mañana, a la misma hora).
         await NotificationService.instance.acknowledgeDose(
           treatmentId: treatment['id'] as int,
           horaInicio: treatment['hora'] as String,
@@ -863,6 +813,8 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     await _loadTreatments();
 
     if (!mounted) return;
+
+    setState(() {});
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -895,8 +847,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     await AppDatabase.instance.insertHistory(historyItem);
 
     try {
-      // Apaga la alarma de esta dosis (no la tiene cerca / no está en
-      // casa) y la reprograma para la siguiente toma.
       await NotificationService.instance.acknowledgeDose(
         treatmentId: treatment['id'] as int,
         horaInicio: treatment['hora'] as String,
@@ -912,16 +862,18 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
     if (!mounted) return;
 
+    setState(() {});
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text(
           "Dosis omitida. Sonará en la próxima toma.",
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
         ),
-        backgroundColor: const Color(0xFFEF5350),
+        backgroundColor: Color(0xFFEF5350),
         behavior: SnackBarBehavior.floating,
       ),
     );

@@ -1,31 +1,10 @@
-// =============================================================================
-// TreatmentFormScreen — versión mejorada
-// -----------------------------------------------------------------------------
-// Cambios principales:
-//  • El botón "Guardar Medicamento" tenía un riesgo real de desbordarse
-//    en celulares angostos (el ícono + el texto no entraban). Ahora usa
-//    FittedBox como red de seguridad y, en pantallas muy angostas,
-//    muestra "Guardar" en vez del texto largo.
-//  • La fila de "¿A qué hora?" ahora usa Expanded en el texto, así que
-//    nunca se desborda sin importar el formato de hora.
-//  • Tamaños de fuente, íconos y espacios se calculan según el ancho de
-//    pantalla, con límites (clamp) para que se vea bien en cualquier
-//    celular.
-//  • El formulario se centra con un ancho máximo en pantallas grandes
-//    (tablets).
-//  • Al guardar, ahora se programa (o reprograma) automáticamente la
-//    alarma real del medicamento usando NotificationService — así
-//    sonará aunque el celular esté bloqueado o la app esté cerrada.
-//  • Toda la lógica de negocio (validaciones, base de datos, formato de
-//    hora) se mantiene igual.
-// =============================================================================
-
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
 import 'package:medicare_app/core/database/app_database.dart';
 import 'package:medicare_app/services/notification_service.dart';
 
-double _clampD(num value, double lo, double hi) => value.clamp(lo, hi).toDouble();
+double _clampD(num value, double lo, double hi) =>
+    value.clamp(lo, hi).toDouble();
 
 class TreatmentFormScreen extends StatefulWidget {
   final Map<String, dynamic>? treatment;
@@ -34,6 +13,7 @@ class TreatmentFormScreen extends StatefulWidget {
     super.key,
     this.treatment,
   });
+
   @override
   State<TreatmentFormScreen> createState() => _TreatmentFormScreenState();
 }
@@ -45,9 +25,11 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
   String frecuencia = "Cada 8 horas";
   TimeOfDay? selectedTime;
 
-  int cantidad = 10;
+  int cantidad = 0;
 
   final TextEditingController nameCtrl = TextEditingController();
+  final TextEditingController cantidadCtrl = TextEditingController();
+
   int? treatmentId;
   bool isLoading = false;
 
@@ -55,17 +37,27 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
   void initState() {
     super.initState();
 
+    cantidadCtrl.clear();
+
     if (widget.treatment != null) {
       nameCtrl.text = widget.treatment!['name'];
       treatmentId = widget.treatment!['id'];
       dosis = widget.treatment!['dosis'];
       frecuencia = widget.treatment!['frecuencia'];
+      cantidad = widget.treatment!['cantidad'] ?? 10;
+      cantidadCtrl.text = cantidad.toString();
+
+      final hora = widget.treatment!['hora'];
+      if (hora is String) {
+        selectedTime = _parseTimeOfDay(hora);
+      }
     }
   }
 
   @override
   void dispose() {
     nameCtrl.dispose();
+    cantidadCtrl.dispose();
     super.dispose();
   }
 
@@ -77,7 +69,11 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
+
+        // IMPORTANTE:
+        // Esto evita que el botón "Guardar" suba cuando aparece el teclado.
         resizeToAvoidBottomInset: true,
+
         appBar: AppBar(
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF1E3A5F),
@@ -109,17 +105,23 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final double s = _clampD(constraints.maxWidth / 390.0, 0.82, 1.25);
+              final double s =
+              _clampD(constraints.maxWidth / 390.0, 0.82, 1.25);
               final bool compactW = constraints.maxWidth < 360;
 
               return Column(
                 children: [
-                  // FORMULARIO CON SCROLL
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.all(compactW ? 18 : 24),
+                      keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.fromLTRB(
+                        compactW ? 18 : 24,
+                        compactW ? 18 : 24,
+                        compactW ? 18 : 24,
+                        40,
+                      ),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 560),
@@ -128,10 +130,10 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // HEADER COMPACTO
                                 Center(
                                   child: Container(
-                                    padding: EdgeInsets.all(_clampD(14 * s, 12, 16)),
+                                    padding:
+                                    EdgeInsets.all(_clampD(14 * s, 12, 16)),
                                     decoration: BoxDecoration(
                                       gradient: const LinearGradient(
                                         colors: [
@@ -142,7 +144,8 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: const Color(0xFF42A5F5).withOpacity(0.3),
+                                          color: const Color(0xFF42A5F5)
+                                              .withOpacity(0.3),
                                           blurRadius: 12,
                                           offset: const Offset(0, 4),
                                         ),
@@ -155,9 +158,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                     ),
                                   ),
                                 ),
-
                                 const SizedBox(height: 16),
-
                                 Center(
                                   child: Text(
                                     "Completa los datos",
@@ -168,10 +169,8 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                     ),
                                   ),
                                 ),
-
                                 const SizedBox(height: 28),
 
-                                // NOMBRE DEL MEDICAMENTO
                                 _label("Nombre del medicamento", s),
                                 const SizedBox(height: 10),
                                 _inputCard(
@@ -190,13 +189,10 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                         color: const Color(0xFFB0BEC5),
                                         fontWeight: FontWeight.w500,
                                       ),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                        vertical: 4,
-                                      ),
                                     ),
                                     validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
+                                      if (value == null ||
+                                          value.trim().isEmpty) {
                                         return "Ingresa el nombre del medicamento";
                                       }
                                       return null;
@@ -206,7 +202,6 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
 
                                 const SizedBox(height: 28),
 
-                                // DOSIS
                                 _label("¿Cuánto tomar?", s),
                                 const SizedBox(height: 12),
                                 _segmentSelector(
@@ -218,7 +213,6 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
 
                                 const SizedBox(height: 28),
 
-                                // FRECUENCIA
                                 _label("¿Cada cuánto?", s),
                                 const SizedBox(height: 12),
                                 _segmentSelector(
@@ -230,17 +224,19 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                     "Cada 24 horas",
                                   ],
                                   selected: frecuencia,
-                                  onSelect: (v) => setState(() => frecuencia = v),
+                                  onSelect: (v) =>
+                                      setState(() => frecuencia = v),
                                   s: s,
                                 ),
 
                                 const SizedBox(height: 28),
 
-                                _label("¿Cuántas pastillas tienes? (opcional)", s),
+                                _label(
+                                    "¿Cuántas pastillas tienes? (opcional)", s),
                                 const SizedBox(height: 10),
-
                                 _inputCard(
                                   child: TextFormField(
+                                    controller: cantidadCtrl,
                                     keyboardType: TextInputType.number,
                                     style: TextStyle(
                                       fontSize: _clampD(21 * s, 18, 22),
@@ -257,7 +253,8 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                       ),
                                     ),
                                     validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
+                                      if (value == null ||
+                                          value.trim().isEmpty) {
                                         return null;
                                       }
 
@@ -268,14 +265,14 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                       return null;
                                     },
                                     onChanged: (value) {
-                                      cantidad = int.tryParse(value.trim()) ?? 0;
+                                      cantidad =
+                                          int.tryParse(value.trim()) ?? 0;
                                     },
                                   ),
                                 ),
 
                                 const SizedBox(height: 28),
 
-                                // HORA DE ALARMA
                                 _label("¿A qué hora?", s),
                                 const SizedBox(height: 10),
                                 _inputCard(
@@ -288,11 +285,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                         vertical: 18,
                                       ),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          // Expanded + ellipsis: nunca se
-                                          // desborda, sin importar el
-                                          // formato de hora.
                                           Expanded(
                                             child: Text(
                                               selectedTime == null
@@ -301,7 +294,8 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: TextStyle(
-                                                fontSize: _clampD(21 * s, 18, 22),
+                                                fontSize:
+                                                _clampD(21 * s, 18, 22),
                                                 fontWeight: FontWeight.w700,
                                                 color: selectedTime == null
                                                     ? const Color(0xFFB0BEC5)
@@ -314,10 +308,11 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                             padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
                                               color: const Color(0xFFFFA726),
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                              BorderRadius.circular(12),
                                             ),
                                             child: Icon(
-                                              Icons.access_time_rounded,
+                                              Icons.touch_app_rounded,
                                               color: Colors.white,
                                               size: _clampD(26 * s, 22, 28),
                                             ),
@@ -327,28 +322,16 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                     ),
                                   ),
                                 ),
+                                  const SizedBox(height: 28),
 
-                                const SizedBox(height: 80),
+                                  _saveButton(s, compactW),
+
+                                  const SizedBox(height: 30),
+
                               ],
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-
-                  // BOTÓN FIJO GRANDE
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      compactW ? 18 : 24,
-                      0,
-                      compactW ? 18 : 24,
-                      20,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 560),
-                        child: _saveButton(s, compactW),
                       ),
                     ),
                   ),
@@ -361,11 +344,275 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
     );
   }
 
+  TimeOfDay? _parseTimeOfDay(String horaTexto) {
+    try {
+      final parts = horaTexto.trim().split(' ');
+      final timeParts = parts[0].split(':');
+
+      int hour = int.parse(timeParts[0]);
+      final int minute = int.parse(timeParts[1]);
+      final String period = parts.length > 1 ? parts[1].toUpperCase() : 'AM';
+
+      if (period == 'PM' && hour != 12) hour += 12;
+      if (period == 'AM' && hour == 12) hour = 0;
+
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (_) {
+      return null;
+    }
+  }
+
   String _formatTime(TimeOfDay time) {
     final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
     final minute = time.minute.toString().padLeft(2, '0');
     final period = time.period == DayPeriod.am ? 'AM' : 'PM';
     return '$hour:$minute $period';
+  }
+
+  Future<void> _pickTime() async {
+    int hour = selectedTime?.hourOfPeriod ?? TimeOfDay.now().hourOfPeriod;
+    if (hour == 0) hour = 12;
+
+    int minute = selectedTime?.minute ?? TimeOfDay.now().minute;
+    minute = ((minute / 5).ceil() * 5) % 60;
+    String period =
+    (selectedTime ?? TimeOfDay.now()).period == DayPeriod.am ? 'AM' : 'PM';
+
+    final result = await showModalBottomSheet<TimeOfDay>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            TimeOfDay buildTime() {
+              int finalHour = hour;
+
+              if (period == 'PM' && finalHour != 12) finalHour += 12;
+              if (period == 'AM' && finalHour == 12) finalHour = 0;
+
+              return TimeOfDay(hour: finalHour, minute: minute);
+            }
+
+            return SafeArea(
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(30),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD0D7DE),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      "Seleccionar hora",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF1E3A5F),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _timeColumn(
+                            title: "Hora",
+                            value: hour.toString().padLeft(2, '0'),
+                            onAdd: () {
+                              setModalState(() {
+                                hour = hour == 12 ? 1 : hour + 1;
+                              });
+                            },
+                            onRemove: () {
+                              setModalState(() {
+                                hour = hour == 1 ? 12 : hour - 1;
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _timeColumn(
+                            title: "Minutos",
+                            value: minute.toString().padLeft(2, '0'),
+                            onAdd: () {
+                              setModalState(() {
+                                minute = (minute + 5) % 60;
+                              });
+                            },
+                            onRemove: () {
+                              setModalState(() {
+                                minute = (minute - 5) < 0 ? 55 : minute - 5;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _periodButton(
+                            text: "AM",
+                            selected: period == "AM",
+                            onTap: () {
+                              setModalState(() => period = "AM");
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _periodButton(
+                            text: "PM",
+                            selected: period == "PM",
+                            onTap: () {
+                              setModalState(() => period = "PM");
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 58,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context, buildTime());
+                        },
+                        icon: const Icon(Icons.check_circle_rounded, size: 26),
+                        label: const Text(
+                          "Usar esta hora",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() => selectedTime = result);
+    }
+  }
+
+  Widget _timeColumn({
+    required String title,
+    required String value,
+    required VoidCallback onAdd,
+    required VoidCallback onRemove,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: const Color(0xFFD7EAFB),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 10),
+          IconButton(
+            onPressed: onAdd,
+            icon: const Icon(Icons.keyboard_arrow_up_rounded),
+            iconSize: 42,
+            color: Color(0xFF1976D2),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 42,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF1E3A5F),
+            ),
+          ),
+          IconButton(
+            onPressed: onRemove,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+            iconSize: 42,
+            color: Color(0xFF1976D2),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _periodButton({
+    required String text,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      height: 58,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor:
+          selected ? const Color(0xFF1976D2) : Colors.white,
+          foregroundColor:
+          selected ? Colors.white : const Color(0xFF1976D2),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: const BorderSide(
+              color: Color(0xFF1976D2),
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 21,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _label(String text, double s) {
@@ -418,7 +665,8 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
             borderRadius: BorderRadius.circular(18),
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: _clampD(16 * s, 14, 18)),
+              padding:
+              EdgeInsets.symmetric(vertical: _clampD(16 * s, 14, 18)),
               decoration: BoxDecoration(
                 color: isSelected ? const Color(0xFF42A5F5) : Colors.white,
                 borderRadius: BorderRadius.circular(18),
@@ -426,18 +674,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                   color: const Color(0xFF42A5F5),
                   width: isSelected ? 3 : 2,
                 ),
-                boxShadow: [
-                  if (isSelected)
-                    BoxShadow(
-                      color: const Color(0xFF42A5F5).withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    )
-                ],
               ),
-              // FittedBox: si el texto más largo ("Cada 24 horas" + el
-              // ícono de check) no entra en pantallas muy angostas, se
-              // reduce solo en vez de desbordarse.
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Row(
@@ -456,7 +693,9 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                       e,
                       style: TextStyle(
                         fontSize: _clampD(18 * s, 16, 20),
-                        color: isSelected ? Colors.white : const Color(0xFF42A5F5),
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF42A5F5),
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.2,
                       ),
@@ -469,35 +708,6 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
         );
       }).toList(),
     );
-  }
-
-  Future<void> _pickTime() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            timePickerTheme: TimePickerThemeData(
-              // Aumentar tamaño de texto en el picker
-              hourMinuteTextStyle: const TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.w900,
-              ),
-              helpTextStyle: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (time != null) {
-      setState(() => selectedTime = time);
-    }
   }
 
   Future<void> _saveTreatment() async {
@@ -571,48 +781,27 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
 
   String _capitalize(String text) {
     if (text.isEmpty) return text;
-
-    return text[0].toUpperCase() +
-        text.substring(1).toLowerCase();
+    return text[0].toUpperCase() + text.substring(1).toLowerCase();
   }
 
   void _showSnackBar(String message, {required bool isError}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              isError ? Icons.error_outline : Icons.check_circle,
-              color: Colors.white,
-              size: 28,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ],
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        backgroundColor: isError ? const Color(0xFFEF5350) : const Color(0xFF66BB6A),
+        backgroundColor:
+        isError ? const Color(0xFFEF5350) : const Color(0xFF66BB6A),
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
     );
   }
 
   Widget _saveButton(double s, bool compactW) {
-    // En pantallas angostas usamos un texto más corto para que nunca
-    // le falte espacio; en pantallas normales, el texto completo.
     final String label = compactW ? "Guardar" : "Guardar Medicamento";
 
     return SizedBox(
@@ -638,15 +827,13 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
             strokeWidth: 4,
           ),
         )
-        // FittedBox: red de seguridad final — el ícono y el texto
-        // nunca se desbordan, sin importar el ancho del celular.
             : FittedBox(
           fit: BoxFit.scaleDown,
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.save_rounded, size: _clampD(28 * s, 24, 30)),
+              Icon(Icons.save_rounded,
+                  size: _clampD(28 * s, 24, 30)),
               const SizedBox(width: 12),
               Text(
                 label,

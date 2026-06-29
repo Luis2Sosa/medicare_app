@@ -12,12 +12,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool soundEnabled = true;
-  bool vibrationEnabled = true;
   bool hasRatedApp = false;
 
-  static const String _soundKey = 'soundEnabled';
-  static const String _vibrationKey = 'vibrationEnabled';
   static const String _ratedKey = 'hasRatedMediCare';
 
   @override
@@ -30,36 +26,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      soundEnabled = prefs.getBool(_soundKey) ?? true;
-      vibrationEnabled = prefs.getBool(_vibrationKey) ?? true;
       hasRatedApp = prefs.getBool(_ratedKey) ?? false;
     });
-  }
-
-  Future<void> _saveSoundPreference(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_soundKey, value);
-
-    if (vibrationEnabled) {
-      _triggerVibration();
-    }
-  }
-
-  Future<void> _saveVibrationPreference(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_vibrationKey, value);
-
-    if (value) {
-      _triggerVibration();
-    }
-  }
-
-  Future<void> _triggerVibration() async {
-    try {
-      await HapticFeedback.lightImpact();
-    } catch (e) {
-      // Vibration not available
-    }
   }
 
   Future<void> _rateApp() async {
@@ -148,43 +116,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Expanded(
                   child: ListView(
                     children: [
-                      _switchCard(
-                        icon: Icons.volume_up_rounded,
-                        title: 'Sonido',
-                        subtitle: soundEnabled
-                            ? 'Sonido activado'
-                            : 'Sonido desactivado',
-                        value: soundEnabled,
+                      _infoCard(
+                        icon: Icons.notifications_active_rounded,
+                        iconColor: const Color(0xFF1976D2),
+                        iconBackground: const Color(0xFFE3F2FD),
+                        title: 'Recordatorios activos',
+                        subtitle:
+                        'MediCare enviará notificaciones cuando sea hora de tomar tus medicamentos.',
                         isSmallScreen: isSmallScreen,
-                        onChanged: (value) {
-                          setState(() {
-                            soundEnabled = value;
-                          });
-                          _saveSoundPreference(value);
-                        },
                       ),
 
-                      _switchCard(
-                        icon: Icons.vibration_rounded,
-                        title: 'Vibración',
-                        subtitle: vibrationEnabled
-                            ? 'Vibración activada'
-                            : 'Vibración desactivada',
-                        value: vibrationEnabled,
+                      _infoCard(
+                        icon: Icons.volume_up_rounded,
+                        iconColor: const Color(0xFF1976D2),
+                        iconBackground: const Color(0xFFE3F2FD),
+                        title: 'Sonido del teléfono',
+                        subtitle:
+                        'Las notificaciones usan el sonido configurado en tu dispositivo.',
                         isSmallScreen: isSmallScreen,
-                        onChanged: (value) {
-                          setState(() {
-                            vibrationEnabled = value;
-                          });
-                          _saveVibrationPreference(value);
-                        },
+                      ),
+
+                      _infoCard(
+                        icon: Icons.lock_rounded,
+                        iconColor: const Color(0xFF1976D2),
+                        iconBackground: const Color(0xFFE3F2FD),
+                        title: 'Privacidad',
+                        subtitle:
+                        'Tus medicamentos se guardan de forma local en este dispositivo.',
+                        isSmallScreen: isSmallScreen,
                       ),
 
                       _exitCard(context, isSmallScreen),
-
-                      SizedBox(height: isSmallScreen ? 6 : 8),
-
-                      _privacyInfoCard(isSmallScreen),
 
                       SizedBox(height: isSmallScreen ? 16 : 22),
 
@@ -228,13 +190,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _switchCard({
+  Widget _infoCard({
     required IconData icon,
+    required Color iconColor,
+    required Color iconBackground,
     required String title,
     required String subtitle,
-    required bool value,
     required bool isSmallScreen,
-    required ValueChanged<bool> onChanged,
   }) {
     return Container(
       margin: EdgeInsets.only(bottom: isSmallScreen ? 12 : 16),
@@ -261,17 +223,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: isSmallScreen ? 44 : 54,
                 height: isSmallScreen ? 44 : 54,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE3F2FD),
+                decoration: BoxDecoration(
+                  color: iconBackground,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   icon,
-                  color: const Color(0xFF1976D2),
+                  color: iconColor,
                   size: isSmallScreen ? 22 : 30,
                 ),
               ),
@@ -288,24 +251,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         color: const Color(0xFF1E3A5F),
                       ),
                     ),
-                    SizedBox(height: isSmallScreen ? 3 : 5),
+                    SizedBox(height: isSmallScreen ? 4 : 6),
                     Text(
                       subtitle,
                       style: TextStyle(
                         fontSize: isSmallScreen ? 13 : 16,
+                        height: 1.35,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF64748B),
                       ),
                     ),
                   ],
-                ),
-              ),
-              Transform.scale(
-                scale: isSmallScreen ? 0.8 : 1.0,
-                child: Switch(
-                  value: value,
-                  activeColor: const Color(0xFF1976D2),
-                  onChanged: onChanged,
                 ),
               ),
             ],
@@ -356,7 +312,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   child: Icon(
                     Icons.logout_rounded,
-                    color: const Color(0xFFE53935),
+                    color: Color(0xFFE53935),
                     size: isSmallScreen ? 22 : 30,
                   ),
                 ),
@@ -394,42 +350,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _privacyInfoCard(bool isSmallScreen) {
-    return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 14 : 18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.70),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.85),
-          width: 1.5,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.lock_rounded,
-            color: const Color(0xFF1976D2),
-            size: isSmallScreen ? 22 : 28,
-          ),
-          SizedBox(width: isSmallScreen ? 10 : 14),
-          Expanded(
-            child: Text(
-              'Tus medicamentos se guardan de forma local en este dispositivo.',
-              style: TextStyle(
-                fontSize: isSmallScreen ? 14 : 16,
-                height: 1.35,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E3A5F),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
