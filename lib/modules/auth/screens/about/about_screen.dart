@@ -118,11 +118,16 @@ class _AboutScreenState extends State<AboutScreen>
         .clamp(minScaleFactor: 0.9, maxScaleFactor: 1.15);
 
     return MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaler: clampedTextScaler),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF7FAFD),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
+        data: MediaQuery.of(context).copyWith(textScaler: clampedTextScaler),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: AppTheme.mainGradient,
+          ),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              scrolledUnderElevation: 0,
           elevation: 0,
           centerTitle: true,
           leading: Padding(
@@ -180,6 +185,7 @@ class _AboutScreenState extends State<AboutScreen>
           ),
         ),
       ),
+        )
     );
   }
 

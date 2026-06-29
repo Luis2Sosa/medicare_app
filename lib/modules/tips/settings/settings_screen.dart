@@ -25,6 +25,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
 
+    if (!mounted) return;
+
     setState(() {
       hasRatedApp = prefs.getBool(_ratedKey) ?? false;
     });
@@ -35,9 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     const packageName = 'com.sosatechlab.medicare_app';
 
-    final playStoreUri = Uri.parse(
-      'market://details?id=$packageName',
-    );
+    final playStoreUri = Uri.parse('market://details?id=$packageName');
 
     final webUri = Uri.parse(
       'https://play.google.com/store/apps/details?id=$packageName',
@@ -68,6 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           content: Text(
             'No se pudo abrir Google Play. Inténtalo más tarde.',
           ),
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
@@ -75,9 +76,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 400;
-
     return Container(
       decoration: const BoxDecoration(
         gradient: AppTheme.mainGradient,
@@ -85,238 +83,253 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              isSmallScreen ? 16 : 22,
-              isSmallScreen ? 16 : 24,
-              isSmallScreen ? 16 : 22,
-              isSmallScreen ? 16 : 22,
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    _backButton(context, isSmallScreen),
-                    SizedBox(width: isSmallScreen ? 10 : 14),
-                    Expanded(
-                      child: Text(
-                        'Configuración',
-                        style: TextStyle(
-                          fontSize: isSmallScreen ? 24 : 30,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF1E3A5F),
-                        ),
-                      ),
-                    ),
-                  ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final r = _Responsive(constraints.maxWidth);
+
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  r.scale(16),
+                  r.scale(16),
+                  r.scale(16),
+                  r.scale(18),
                 ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: r.maxContentWidth,
+                    ),
+                    child: Column(
+                      children: [
+                        _header(context, r),
+                        SizedBox(height: r.scale(14)),
 
-                SizedBox(height: isSmallScreen ? 20 : 28),
+                        _settingsCard(
+                          icon: Icons.notifications_active_rounded,
+                          iconColor: const Color(0xFF1976D2),
+                          iconBackground: const Color(0xFFE3F2FD),
+                          title: 'Recordatorios',
+                          subtitle:
+                          'Recibirás avisos cuando sea hora de tomar tus medicamentos.',
+                          r: r,
+                        ),
 
-                Expanded(
-                  child: ListView(
-                    children: [
-                      _infoCard(
-                        icon: Icons.notifications_active_rounded,
-                        iconColor: const Color(0xFF1976D2),
-                        iconBackground: const Color(0xFFE3F2FD),
-                        title: 'Recordatorios activos',
-                        subtitle:
-                        'MediCare enviará notificaciones cuando sea hora de tomar tus medicamentos.',
-                        isSmallScreen: isSmallScreen,
-                      ),
+                        _settingsCard(
+                          icon: Icons.volume_up_rounded,
+                          iconColor: const Color(0xFF1976D2),
+                          iconBackground: const Color(0xFFE3F2FD),
+                          title: 'Sonido',
+                          subtitle:
+                          'Las alertas usan el sonido configurado en tu teléfono.',
+                          r: r,
+                        ),
 
-                      _infoCard(
-                        icon: Icons.volume_up_rounded,
-                        iconColor: const Color(0xFF1976D2),
-                        iconBackground: const Color(0xFFE3F2FD),
-                        title: 'Sonido del teléfono',
-                        subtitle:
-                        'Las notificaciones usan el sonido configurado en tu dispositivo.',
-                        isSmallScreen: isSmallScreen,
-                      ),
+                        _settingsCard(
+                          icon: Icons.lock_rounded,
+                          iconColor: const Color(0xFF1976D2),
+                          iconBackground: const Color(0xFFE3F2FD),
+                          title: 'Privacidad',
+                          subtitle:
+                          'Tus medicamentos se guardan solo en este dispositivo.',
+                          r: r,
+                        ),
 
-                      _infoCard(
-                        icon: Icons.lock_rounded,
-                        iconColor: const Color(0xFF1976D2),
-                        iconBackground: const Color(0xFFE3F2FD),
-                        title: 'Privacidad',
-                        subtitle:
-                        'Tus medicamentos se guardan de forma local en este dispositivo.',
-                        isSmallScreen: isSmallScreen,
-                      ),
+                        _exitCard(context, r),
 
-                      _exitCard(context, isSmallScreen),
+                        SizedBox(height: r.scale(8)),
 
-                      SizedBox(height: isSmallScreen ? 16 : 22),
-
-                      hasRatedApp
-                          ? _thanksBanner(isSmallScreen)
-                          : _rateAppBanner(context, isSmallScreen),
-                    ],
+                        hasRatedApp
+                            ? _thanksBanner(r)
+                            : _rateAppBanner(r),
+                      ],
+                    ),
                   ),
                 ),
-              ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _header(BuildContext context, _Responsive r) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: r.scale(14),
+        vertical: r.scale(14),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.72),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFFD7EAFB),
+          width: 1.4,
+        ),
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: Container(
+              width: r.scale(44),
+              height: r.scale(44),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE3F2FD),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.arrow_back_rounded,
+                color: const Color(0xFF1976D2),
+                size: r.scale(25),
+              ),
             ),
           ),
-        ),
-      ),
-    );
-  }
 
-  Widget _backButton(BuildContext context, bool isSmallScreen) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        Navigator.pop(context);
-      },
-      child: Container(
-        width: isSmallScreen ? 40 : 48,
-        height: isSmallScreen ? 40 : 48,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFFD7EAFB),
-            width: 2,
+          SizedBox(width: r.scale(12)),
+
+          Expanded(
+            child: Text(
+              'Configuración',
+              style: TextStyle(
+                fontSize: r.font(28),
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF1E3A5F),
+                letterSpacing: -0.2,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
-        child: Icon(
-          Icons.arrow_back_rounded,
-          color: const Color(0xFF1976D2),
-          size: isSmallScreen ? 20 : 28,
-        ),
+        ],
       ),
     );
   }
 
-  Widget _infoCard({
+  Widget _settingsCard({
     required IconData icon,
     required Color iconColor,
     required Color iconBackground,
     required String title,
     required String subtitle,
-    required bool isSmallScreen,
+    required _Responsive r,
   }) {
     return Container(
-      margin: EdgeInsets.only(bottom: isSmallScreen ? 12 : 16),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isSmallScreen ? 14 : 18,
-            vertical: isSmallScreen ? 14 : 18,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: const Color(0xFFD7EAFB),
-              width: 2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: isSmallScreen ? 44 : 54,
-                height: isSmallScreen ? 44 : 54,
-                decoration: BoxDecoration(
-                  color: iconBackground,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: isSmallScreen ? 22 : 30,
-                ),
-              ),
-              SizedBox(width: isSmallScreen ? 12 : 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: isSmallScreen ? 17 : 21,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF1E3A5F),
-                      ),
-                    ),
-                    SizedBox(height: isSmallScreen ? 4 : 6),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: isSmallScreen ? 13 : 16,
-                        height: 1.35,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+      margin: EdgeInsets.only(bottom: r.scale(10)),
+      padding: EdgeInsets.all(r.scale(14)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: const Color(0xFFD7EAFB),
+          width: 1.7,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.055),
+            blurRadius: 16,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: r.scale(48),
+            height: r.scale(48),
+            decoration: BoxDecoration(
+              color: iconBackground,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: r.scale(27),
+            ),
+          ),
+
+          SizedBox(width: r.scale(12)),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: r.font(19),
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF1E3A5F),
+                  ),
+                ),
+                SizedBox(height: r.scale(3)),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: r.font(14),
+                    height: 1.3,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _exitCard(BuildContext context, bool isSmallScreen) {
+  Widget _exitCard(BuildContext context, _Responsive r) {
     return Container(
-      margin: EdgeInsets.only(bottom: isSmallScreen ? 12 : 16),
+      margin: EdgeInsets.only(bottom: r.scale(10)),
       child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(22),
           onTap: () {
             SystemNavigator.pop();
           },
           child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 14 : 18,
-              vertical: isSmallScreen ? 14 : 18,
-            ),
+            padding: EdgeInsets.all(r.scale(14)),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
+              color: const Color(0xFFFFFBFB),
+              borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: const Color(0xFFD7EAFB),
-                width: 2,
+                color: const Color(0xFFFFCDD2),
+                width: 1.7,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
+                  color: Colors.black.withOpacity(0.055),
                   blurRadius: 16,
-                  offset: const Offset(0, 8),
+                  offset: const Offset(0, 7),
                 ),
               ],
             ),
             child: Row(
               children: [
                 Container(
-                  width: isSmallScreen ? 44 : 54,
-                  height: isSmallScreen ? 44 : 54,
+                  width: r.scale(48),
+                  height: r.scale(48),
                   decoration: const BoxDecoration(
                     color: Color(0xFFFFEBEE),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.logout_rounded,
-                    color: Color(0xFFE53935),
-                    size: isSmallScreen ? 22 : 30,
+                    color: const Color(0xFFE53935),
+                    size: r.scale(27),
                   ),
                 ),
-                SizedBox(width: isSmallScreen ? 12 : 16),
+
+                SizedBox(width: r.scale(12)),
+
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,16 +337,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Text(
                         'Salir',
                         style: TextStyle(
-                          fontSize: isSmallScreen ? 17 : 21,
+                          fontSize: r.font(19),
                           fontWeight: FontWeight.w900,
                           color: const Color(0xFF1E3A5F),
                         ),
                       ),
-                      SizedBox(height: isSmallScreen ? 3 : 5),
+                      SizedBox(height: r.scale(3)),
                       Text(
-                        'Salir de MediCare',
+                        'Cerrar MediCare',
                         style: TextStyle(
-                          fontSize: isSmallScreen ? 13 : 16,
+                          fontSize: r.font(14),
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF64748B),
                         ),
@@ -341,10 +354,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                 ),
+
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   color: const Color(0xFF94A3B8),
-                  size: isSmallScreen ? 16 : 20,
+                  size: r.scale(17),
                 ),
               ],
             ),
@@ -354,21 +368,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _rateAppBanner(BuildContext context, bool isSmallScreen) {
+  Widget _rateAppBanner(_Responsive r) {
     return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 14 : 18),
+      width: double.infinity,
+      padding: EdgeInsets.all(r.scale(16)),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
+        color: Colors.white.withOpacity(0.76),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.90),
-          width: 1.5,
+          color: Colors.white.withOpacity(0.95),
+          width: 1.4,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withOpacity(0.055),
             blurRadius: 16,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 7),
           ),
         ],
       ),
@@ -378,45 +393,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
             '⭐⭐⭐⭐⭐',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: isSmallScreen ? 20 : 26,
-              letterSpacing: 2,
+              fontSize: r.font(22),
+              letterSpacing: 1.8,
             ),
           ),
-          SizedBox(height: isSmallScreen ? 8 : 10),
+
+          SizedBox(height: r.scale(8)),
+
           Text(
-            '¿Qué te parece MediCare?',
+            '¿Te gusta MediCare?',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: isSmallScreen ? 16 : 20,
+              fontSize: r.font(20),
               fontWeight: FontWeight.w900,
               color: const Color(0xFF1E3A5F),
             ),
           ),
-          SizedBox(height: isSmallScreen ? 6 : 8),
+
+          SizedBox(height: r.scale(5)),
+
           Text(
-            'Tu opinión nos ayuda a mejorar y a que más personas descubran la aplicación.',
+            'Tu opinión nos ayuda a mejorar.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: isSmallScreen ? 13 : 15,
-              height: 1.35,
+              fontSize: r.font(14),
+              height: 1.3,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF64748B),
             ),
           ),
-          SizedBox(height: isSmallScreen ? 12 : 16),
+
+          SizedBox(height: r.scale(12)),
+
           SizedBox(
             width: double.infinity,
-            height: isSmallScreen ? 42 : 48,
+            height: r.scale(48),
             child: ElevatedButton.icon(
               onPressed: _rateApp,
               icon: Icon(
                 Icons.star_rate_rounded,
-                size: isSmallScreen ? 16 : 20,
+                size: r.scale(20),
               ),
               label: Text(
                 'Calificar aplicación',
                 style: TextStyle(
-                  fontSize: isSmallScreen ? 14 : 16,
+                  fontSize: r.font(16),
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -435,21 +456,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _thanksBanner(bool isSmallScreen) {
+  Widget _thanksBanner(_Responsive r) {
     return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 14 : 18),
+      width: double.infinity,
+      padding: EdgeInsets.all(r.scale(16)),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
+        color: Colors.white.withOpacity(0.76),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.90),
-          width: 1.5,
+          color: Colors.white.withOpacity(0.95),
+          width: 1.4,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withOpacity(0.055),
             blurRadius: 16,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 7),
           ),
         ],
       ),
@@ -458,51 +480,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Icon(
             Icons.favorite_rounded,
             color: const Color(0xFFE53935),
-            size: isSmallScreen ? 36 : 46,
+            size: r.scale(38),
           ),
-          SizedBox(height: isSmallScreen ? 8 : 10),
+
+          SizedBox(height: r.scale(8)),
+
           Text(
             '¡Muchas gracias!',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: isSmallScreen ? 18 : 22,
+              fontSize: r.font(20),
               fontWeight: FontWeight.w900,
               color: const Color(0xFF1E3A5F),
             ),
           ),
-          SizedBox(height: isSmallScreen ? 6 : 8),
+
+          SizedBox(height: r.scale(5)),
+
           Text(
-            'Gracias por apoyar MediCare. Tu valoración nos ayuda a seguir mejorando la aplicación.',
+            'Gracias por apoyar MediCare.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: isSmallScreen ? 13 : 15,
-              height: 1.35,
+              fontSize: r.font(14),
+              height: 1.3,
               fontWeight: FontWeight.w700,
               color: const Color(0xFF64748B),
             ),
           ),
-          SizedBox(height: isSmallScreen ? 10 : 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.check_circle_rounded,
-                color: const Color(0xFF10B981),
-                size: isSmallScreen ? 20 : 24,
-              ),
-              SizedBox(width: isSmallScreen ? 6 : 8),
-              Text(
-                'Aplicación calificada',
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 14 : 16,
-                  fontWeight: FontWeight.w900,
+
+          SizedBox(height: r.scale(10)),
+
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: r.scale(12),
+              vertical: r.scale(8),
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F8F1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle_rounded,
                   color: const Color(0xFF10B981),
+                  size: r.scale(20),
                 ),
-              ),
-            ],
+                SizedBox(width: r.scale(6)),
+                Text(
+                  'Aplicación calificada',
+                  style: TextStyle(
+                    fontSize: r.font(14),
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF10B981),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
+  }
+}
+
+class _Responsive {
+  final double width;
+
+  const _Responsive(this.width);
+
+  bool get isTablet => width >= 600;
+
+  double get maxContentWidth => isTablet ? 520 : double.infinity;
+
+  double get _factor => _clamp(width / 390, 0.86, 1.16);
+
+  double scale(double base) => base * _factor;
+
+  double font(double base) {
+    final eased = 1 + (_factor - 1) * 0.55;
+    return base * _clamp(eased, 0.9, 1.12);
+  }
+
+  static double _clamp(double value, double min, double max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
   }
 }

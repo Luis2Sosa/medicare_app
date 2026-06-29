@@ -340,53 +340,77 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _emptyState(bool isSmallScreen) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Center(
-        child: Container(
-          margin: EdgeInsets.all(isSmallScreen ? 20 : 28),
-          padding: EdgeInsets.all(isSmallScreen ? 20 : 26),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.94),
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(
-              color: const Color(0xFF42A5F5),
-              width: 2,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
+            ),
+            child: Center(
+              child: Container(
+                margin: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 20 : 28,
+                ),
+                padding: EdgeInsets.all(
+                  isSmallScreen ? 22 : 28,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.94),
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(
+                    color: const Color(0xFF42A5F5),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF42A5F5).withOpacity(0.12),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.history_rounded,
+                      size: isSmallScreen ? 60 : 76,
+                      color: const Color(0xFF1E3A5F),
+                    ),
+
+                    SizedBox(height: isSmallScreen ? 14 : 18),
+
+                    Text(
+                      "Sin historial aún",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 22 : 28,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF1E3A5F),
+                      ),
+                    ),
+
+                    SizedBox(height: isSmallScreen ? 10 : 12),
+
+                    Text(
+                      "Aquí aparecerán los medicamentos\nque hayas tomado u omitido.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 15 : 18,
+                        height: 1.4,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF5B7C99),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.history_rounded,
-                size: isSmallScreen ? 60 : 76,
-                color: const Color(0xFF1E3A5F),
-              ),
-              SizedBox(height: isSmallScreen ? 14 : 18),
-              Text(
-                "Sin historial aún",
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 22 : 28,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF1E3A5F),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: isSmallScreen ? 8 : 10),
-              Text(
-                "Aquí aparecerán tus medicamentos tomados u omitidos.",
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 15 : 18,
-                  color: const Color(0xFF5B7C99),
-                  fontWeight: FontWeight.w700,
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 

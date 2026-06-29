@@ -681,39 +681,161 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          "¿Eliminar?",
-          style: TextStyle(
-            fontSize: isSmallScreen ? 24 : 28,
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF1E3A5F),
-          ),
-          textAlign: TextAlign.center,
+      builder: (context) => Dialog(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 20 : 32,
         ),
-        content: Text(
-          "¿Seguro que quieres eliminar ${treatment['name']}?",
-          style: TextStyle(
-            fontSize: isSmallScreen ? 16 : 19,
-            color: const Color(0xFF5B7C99),
-            fontWeight: FontWeight.w600,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: EdgeInsets.fromLTRB(
+            isSmallScreen ? 20 : 24,
+            isSmallScreen ? 20 : 24,
+            isSmallScreen ? 20 : 24,
+            isSmallScreen ? 18 : 22,
           ),
-          textAlign: TextAlign.center,
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.16),
+                blurRadius: 22,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: isSmallScreen ? 64 : 72,
+                height: isSmallScreen ? 64 : 72,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFE4E6),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.delete_rounded,
+                  color: const Color(0xFFDC2626),
+                  size: isSmallScreen ? 36 : 42,
+                ),
+              ),
+
+              SizedBox(height: isSmallScreen ? 14 : 16),
+
+              Text(
+                "Eliminar medicamento",
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 22 : 25,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF1E3A5F),
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: isSmallScreen ? 12 : 14),
+
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 12 : 16,
+                  vertical: isSmallScreen ? 12 : 14,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: const Color(0xFFE2E8F0),
+                    width: 1.2,
+                  ),
+                ),
+                child: Text(
+                  treatment['name'] ?? 'Medicamento',
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 19 : 22,
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF1E3A5F),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+
+              SizedBox(height: isSmallScreen ? 12 : 14),
+
+              Text(
+                "Esta acción no se puede deshacer.",
+                style: TextStyle(
+                  fontSize: isSmallScreen ? 16 : 18,
+                  color: const Color(0xFF64748B),
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: isSmallScreen ? 20 : 24),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: isSmallScreen ? 48 : 52,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE2E8F0),
+                          foregroundColor: const Color(0xFF334155),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          "Cancelar",
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 16 : 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  Expanded(
+                    child: SizedBox(
+                      height: isSmallScreen ? 48 : 52,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _deleteTreatment(index);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFDC2626),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          "Eliminar",
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 16 : 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("No"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteTreatment(index);
-            },
-            child: const Text("Sí, eliminar"),
-          ),
-        ],
       ),
     );
   }
