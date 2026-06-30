@@ -111,7 +111,7 @@ class _StartScreenState extends State<StartScreen>
                                 child: _logoHeader(m),
                               ),
 
-                              SizedBox(height: m.mainGap),
+                              SizedBox(height: 20),
 
                               FadeTransition(
                                 opacity: contentFade,
@@ -171,7 +171,7 @@ class _StartScreenState extends State<StartScreen>
           ),
         ),
 
-        SizedBox(height: m.tinyGap),
+        const SizedBox(height: 0),
 
         Text(
           "MediCare",
@@ -185,33 +185,32 @@ class _StartScreenState extends State<StartScreen>
           ),
         ),
 
-        SizedBox(height: m.logoSubtitleGap),
+        const SizedBox(height: 2),
 
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 58,
-              height: 1.5,
-              color: AppTheme.primaryBlue.withOpacity(0.16),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Icon(
-                Icons.favorite_rounded,
-                color: AppTheme.primaryBlue.withOpacity(0.85),
-                size: 18,
+        SizedBox(
+          width: 180,
+          height: 30,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              CustomPaint(
+                size: const Size(180, 30),
+                painter: _HeartbeatPainter(),
               ),
-            ),
-            Container(
-              width: 58,
-              height: 1.5,
-              color: AppTheme.primaryBlue.withOpacity(0.16),
-            ),
-          ],
+              Container(
+                color: Colors.transparent,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  color: Colors.red,
+                  size: 22,
+                ),
+              ),
+            ],
+          ),
         ),
 
-        SizedBox(height: m.tinyGap),
+        const SizedBox(height: 2),
 
         Text(
           "Pensada para personas mayores",
@@ -513,6 +512,49 @@ class _StartScreenState extends State<StartScreen>
   }
 }
 
+class _HeartbeatPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF42A5F5)
+      ..strokeWidth = 2.2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final y = size.height / 2;
+
+    final path = Path();
+
+    // Línea izquierda
+    path.moveTo(0, y);
+    path.lineTo(28, y);
+
+    // Pico ECG izquierdo
+    path.lineTo(36, y - 8);
+    path.lineTo(44, y + 8);
+    path.lineTo(52, y);
+
+    // Espacio para el corazón
+    path.lineTo(72, y);
+    path.moveTo(108, y);
+
+    // Pico ECG derecho
+    path.lineTo(128, y);
+    path.lineTo(136, y - 8);
+    path.lineTo(144, y + 8);
+    path.lineTo(152, y);
+
+    // Línea final
+    path.lineTo(size.width, y);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
 class _PressableScale extends StatefulWidget {
   final Widget Function(bool pressed) builder;
   final VoidCallback onTap;
@@ -659,10 +701,10 @@ class _ScreenMetrics {
 
     return _ScreenMetrics._(
       horizontalPadding: isCompactWidth ? 18 : 22,
-      topPadding: isCompactHeight ? 8 : 18,
+      topPadding: isCompactHeight ? 0 : 6,
       bottomPadding: isCompactHeight ? 14 : 20,
 
-      logoSize: _clampD((isCompactHeight ? 98 : 120) * scale, 88, 135),
+      logoSize: _clampD((isCompactHeight ? 120 : 150) * scale, 110, 165),
       logoTitleSize: _clampD(36 * scale, 31, 43),
       logoSubtitleGap: isCompactHeight ? 8 : 12,
       headerTextSize: _clampD(15.5 * scale, 14, 18),

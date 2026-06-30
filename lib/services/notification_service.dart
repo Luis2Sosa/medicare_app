@@ -14,8 +14,6 @@ class NotificationService {
   static const String _channelDescription =
       'Alarmas para recordarte tomar tus medicamentos a tiempo';
 
-  static const int _maxSlotsPerTreatment = 10;
-
   bool _initialized = false;
 
   Future<void> init() async {
@@ -26,7 +24,8 @@ class NotificationService {
     final location = tz.getLocation('America/Santo_Domingo');
     tz.setLocalLocation(location);
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+    AndroidInitializationSettings('@drawable/ic_notification');
 
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -41,7 +40,9 @@ class NotificationService {
       ),
     );
 
-    final androidImpl = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidImpl =
+    _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
 
     const channel = AndroidNotificationChannel(
       _channelId,
@@ -58,15 +59,14 @@ class NotificationService {
   }
 
   Future<void> requestPermissions() async {
-    final androidImpl = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final androidImpl =
+    _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
 
     await androidImpl?.requestNotificationsPermission();
     await androidImpl?.requestExactAlarmsPermission();
   }
 
-  /// Programa todas las alarmas diarias de un tratamiento según su
-  /// frecuencia (ej: "Cada 8 horas" => 3 alarmas/día), cancelando
-  /// primero cualquier alarma anterior de este tratamiento.
   Future<void> scheduleRemindersForTreatment({
     required int treatmentId,
     required String medicationName,
@@ -76,29 +76,16 @@ class NotificationService {
   }) async {
     await cancelRemindersForTreatment(treatmentId);
 
-    final int intervalHours = _parseFrecuenciaHoras(frecuencia);
-    final int startMinutesOfDay = _parseHoraATotalMinutos(horaInicio);
-    final int vecesAlDia = _vecesAlDia(intervalHours);
+    await _scheduleSingleReminder(
+      treatmentId: treatmentId,
+      hora: horaInicio,
+      medicationName: medicationName,
+      dosis: dosis,
+    );
 
-    for (int i = 0; i < vecesAlDia; i++) {
-      final int totalMinutos = _slotMinutes(startMinutesOfDay, intervalHours, i);
-      await _scheduleSlot(
-        treatmentId: treatmentId,
-        slotIndex: i,
-        totalMinutos: totalMinutos,
-        medicationName: medicationName,
-        dosis: dosis,
-      );
-    }
-
-    print("TODAS LAS ALARMAS DEL TRATAMIENTO $treatmentId PROGRAMADAS ($vecesAlDia/día)");
+    print("ALARMA DEL TRATAMIENTO $treatmentId PROGRAMADA PARA $horaInicio");
   }
 
-  /// Se llama cuando el usuario marca una dosis como "Tomada" u
-  /// "Omitida". Apaga la notificación de la dosis que corresponde a
-  /// AHORA (la más cercana a la hora actual) y la reprograma para su
-  /// siguiente ocurrencia (normalmente mañana, a la misma hora), sin
-  /// afectar las demás dosis del día.
   Future<void> acknowledgeDose({
     required int treatmentId,
     required String horaInicio,
@@ -106,78 +93,43 @@ class NotificationService {
     required String medicationName,
     required String dosis,
   }) async {
-    final int intervalHours = _parseFrecuenciaHoras(frecuencia);
-    final int startMinutesOfDay = _parseHoraATotalMinutos(horaInicio);
-    final int vecesAlDia = _vecesAlDia(intervalHours);
+    await cancelRemindersForTreatment(treatmentId);
 
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    final int nowMinutes = now.hour * 60 + now.minute;
-
-    int closestSlot = 0;
-    int closestDiff = 24 * 60;
-
-    for (int i = 0; i < vecesAlDia; i++) {
-      final int slotMinutes = _slotMinutes(startMinutesOfDay, intervalHours, i);
-      final int diff = (slotMinutes - nowMinutes).abs();
-      final int realDiff = diff < (24 * 60 - diff) ? diff : (24 * 60 - diff);
-
-      if (realDiff < closestDiff) {
-        closestDiff = realDiff;
-        closestSlot = i;
-      }
-    }
-
-    final int totalMinutos = _slotMinutes(startMinutesOfDay, intervalHours, closestSlot);
-    final int notifId = treatmentId * 100 + closestSlot;
-
-    // Apaga/quita la notificación de la dosis actual.
-    await _plugin.cancel(notifId);
-
-    // La reprograma para su próxima ocurrencia (mañana, misma hora),
-    // sin tocar las demás dosis del tratamiento.
-    await _scheduleSlot(
+    await _scheduleSingleReminder(
       treatmentId: treatmentId,
-      slotIndex: closestSlot,
-      totalMinutos: totalMinutos,
+      hora: horaInicio,
       medicationName: medicationName,
       dosis: dosis,
     );
 
-    print("DOSIS RECONOCIDA: tratamiento $treatmentId, slot $closestSlot reprogramado");
+    print("DOSIS RECONOCIDA. PRÓXIMA ALARMA: $horaInicio");
   }
 
-  /// Cancela todas las alarmas asociadas a un tratamiento (todos sus slots).
   Future<void> cancelRemindersForTreatment(int treatmentId) async {
-    for (int i = 0; i < _maxSlotsPerTreatment; i++) {
-      await _plugin.cancel(treatmentId * 100 + i);
-    }
+    await _plugin.cancel(treatmentId);
   }
 
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
   }
 
-  // --------------------------------------------------------------------
-  // Helpers internos
-  // --------------------------------------------------------------------
-
-  Future<void> _scheduleSlot({
+  Future<void> _scheduleSingleReminder({
     required int treatmentId,
-    required int slotIndex,
-    required int totalMinutos,
+    required String hora,
     required String medicationName,
     required String dosis,
   }) async {
+    final int totalMinutos = _parseHoraATotalMinutos(hora);
     final int hour = totalMinutos ~/ 60;
     final int minute = totalMinutos % 60;
-    final int notifId = treatmentId * 100 + slotIndex;
 
-    final tz.TZDateTime scheduledDate = _nextOccurrenceFromHourMinute(hour, minute);
+    final tz.TZDateTime scheduledDate =
+    _nextOccurrenceFromHourMinute(hour, minute);
 
-    print("ALARMA (trat $treatmentId, slot $slotIndex) PROGRAMÁNDOSE PARA: $scheduledDate");
+    print("ALARMA PROGRAMÁNDOSE PARA: $scheduledDate");
 
     await _plugin.zonedSchedule(
-      notifId,
+      treatmentId,
       'Hora de tu medicamento 💊',
       '$medicationName — $dosis',
       scheduledDate,
@@ -186,6 +138,7 @@ class NotificationService {
           _channelId,
           _channelName,
           channelDescription: _channelDescription,
+          icon: 'ic_notification',
           importance: Importance.max,
           priority: Priority.high,
           playSound: true,
@@ -206,27 +159,13 @@ class NotificationService {
     );
   }
 
-  int _vecesAlDia(int intervalHours) {
-    return (24 / intervalHours).round().clamp(1, _maxSlotsPerTreatment);
-  }
-
-  int _slotMinutes(int startMinutesOfDay, int intervalHours, int slotIndex) {
-    return (startMinutesOfDay + slotIndex * intervalHours * 60) % (24 * 60);
-  }
-
-  int _parseFrecuenciaHoras(String frecuencia) {
-    final match = RegExp(r'(\d+)').firstMatch(frecuencia);
-    if (match == null) return 24;
-    return int.tryParse(match.group(1)!) ?? 24;
-  }
-
   int _parseHoraATotalMinutos(String horaTexto) {
     final parts = horaTexto.trim().split(' ');
     final timeParts = parts[0].split(':');
 
     int hour = int.parse(timeParts[0]);
     final int minute = int.parse(timeParts[1]);
-    final String period = parts[1].toUpperCase();
+    final String period = parts.length > 1 ? parts[1].toUpperCase() : 'AM';
 
     if (period == 'PM' && hour != 12) hour += 12;
     if (period == 'AM' && hour == 12) hour = 0;

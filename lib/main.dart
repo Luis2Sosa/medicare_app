@@ -25,11 +25,14 @@ void main() async {
 
     for (final t in treatments) {
       try {
+        final String horaParaAlarma =
+        (t['proximaHora'] ?? t['hora'] ?? '12:00 AM') as String;
+
         await NotificationService.instance.scheduleRemindersForTreatment(
           treatmentId: t['id'] as int,
           medicationName: t['name'] as String,
           dosis: t['dosis'] as String,
-          horaInicio: t['hora'] as String,
+          horaInicio: horaParaAlarma,
           frecuencia: t['frecuencia'] as String,
         );
       } catch (e) {

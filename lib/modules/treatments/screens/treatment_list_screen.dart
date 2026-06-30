@@ -33,33 +33,42 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   }
 
   String _getNextDoseTime(Map<String, dynamic> treatment) {
-    final String hora = treatment['hora'] ?? '12:00 AM';
-    final String frecuencia = treatment['frecuencia'] ?? 'Cada 24 horas';
-
-    final int startMinutes = _parseHoraATotalMinutos(hora);
-    final int intervalHours = _parseFrecuenciaHoras(frecuencia);
-    final int intervalMinutes = intervalHours * 60;
-
-    final now = DateTime.now();
-    final int nowMinutes = now.hour * 60 + now.minute;
-
-    int nextMinutes = startMinutes;
-
-    for (int i = 0; i < 10; i++) {
-      if (nextMinutes > nowMinutes) {
-        return _formatMinutesToTime(nextMinutes);
-      }
-
-      nextMinutes = (startMinutes + ((i + 1) * intervalMinutes)) % (24 * 60);
-    }
-
-    return _formatMinutesToTime(startMinutes);
+    return treatment['proximaHora'] ?? treatment['hora'] ?? '12:00 AM';
   }
 
-  int _parseFrecuenciaHoras(String frecuencia) {
+  String _calculateNextDoseTime(Map<String, dynamic> treatment) {
+    final String currentTime =
+        treatment['proximaHora'] ?? treatment['hora'] ?? '12:00 AM';
+
+    final String frecuencia = treatment['frecuencia'] ?? 'Cada 24 horas';
+
+    final int currentMinutes = _parseHoraATotalMinutos(currentTime);
+    final int intervalMinutes = _parseFrecuenciaMinutos(frecuencia);
+
+    final int nextMinutes = (currentMinutes + intervalMinutes) % (24 * 60);
+
+    return _formatMinutesToTime(nextMinutes);
+  }
+
+  int _parseFrecuenciaMinutos(String frecuencia) {
     final match = RegExp(r'(\d+)').firstMatch(frecuencia);
-    if (match == null) return 24;
-    return int.tryParse(match.group(1)!) ?? 24;
+    final int number = match == null ? 24 : int.tryParse(match.group(1)!) ?? 24;
+
+    final lower = frecuencia.toLowerCase();
+
+    if (lower.contains('minuto')) {
+      return number;
+    }
+
+    if (lower.contains('día') || lower.contains('dia')) {
+      return number * 24 * 60;
+    }
+
+    if (lower.contains('semana')) {
+      return number * 7 * 24 * 60;
+    }
+
+    return number * 60;
   }
 
   int _parseHoraATotalMinutos(String horaTexto) {
@@ -216,7 +225,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           color: const Color(0xFF64B5F6),
           width: 2.2,
         ),
-
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,9 +290,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               ),
             ],
           ),
-
           SizedBox(height: isSmallScreen ? 18 : 22),
-
           Container(
             width: double.infinity,
             padding: EdgeInsets.symmetric(
@@ -342,9 +348,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               ],
             ),
           ),
-
           SizedBox(height: isSmallScreen ? 12 : 14),
-
           Row(
             children: [
               Expanded(
@@ -391,7 +395,9 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
-                  "Quedan ${treatment['cantidad'] ?? 0}",
+                  (treatment['cantidad'] ?? 0) > 0
+                      ? "Quedan ${treatment['cantidad']}"
+                      : "En uso",
                   style: TextStyle(
                     fontSize: isSmallScreen ? 14 : 16,
                     fontWeight: FontWeight.w900,
@@ -401,9 +407,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               ),
             ],
           ),
-
           SizedBox(height: isSmallScreen ? 14 : 18),
-
           Row(
             children: [
               Expanded(
@@ -483,7 +487,6 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                       blurRadius: 22,
                       offset: const Offset(0, 10),
                     ),
-
                   ],
                 ),
                 child: Icon(
@@ -720,9 +723,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   size: isSmallScreen ? 36 : 42,
                 ),
               ),
-
               SizedBox(height: isSmallScreen ? 14 : 16),
-
               Text(
                 "Eliminar medicamento",
                 style: TextStyle(
@@ -732,9 +733,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-
               SizedBox(height: isSmallScreen ? 12 : 14),
-
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(
@@ -761,9 +760,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-
               SizedBox(height: isSmallScreen ? 12 : 14),
-
               Text(
                 "Esta acción no se puede deshacer.",
                 style: TextStyle(
@@ -774,9 +771,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-
               SizedBox(height: isSmallScreen ? 20 : 24),
-
               Row(
                 children: [
                   Expanded(
@@ -802,9 +797,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 10),
-
                   Expanded(
                     child: SizedBox(
                       height: isSmallScreen ? 48 : 52,
@@ -872,6 +865,11 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   void _markAsTaken(Map<String, dynamic> treatment) async {
     final now = DateTime.now();
 
+    final String currentDoseTime = _getNextDoseTime(treatment);
+    final String nextDoseTime = _calculateNextDoseTime(treatment);
+
+    final bool controlaCantidad = (treatment['cantidad'] ?? 0) > 0;
+
     int cantidadActual = treatment['cantidad'] ?? 0;
     int descuento = 1;
 
@@ -881,23 +879,27 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
       descuento = 1;
     }
 
-    int nuevaCantidad = cantidadActual - descuento;
+    int nuevaCantidad = cantidadActual;
 
-    if (nuevaCantidad < 0) {
-      nuevaCantidad = 0;
+    if (controlaCantidad) {
+      nuevaCantidad -= descuento;
+
+      if (nuevaCantidad < 0) {
+        nuevaCantidad = 0;
+      }
     }
 
     final historyItem = {
       'medicamento': treatment['name'],
       'dosis': treatment['dosis'],
       'fecha': '${now.day}/${now.month}/${now.year}',
-      'hora': treatment['hora'],
+      'hora': currentDoseTime,
       'tomado': 1,
     };
 
     await AppDatabase.instance.insertHistory(historyItem);
 
-    if (nuevaCantidad == 0) {
+    if (controlaCantidad && nuevaCantidad == 0) {
       await AppDatabase.instance.deleteTreatment(treatment['id']);
 
       try {
@@ -914,6 +916,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
         'dosis': treatment['dosis'],
         'frecuencia': treatment['frecuencia'],
         'hora': treatment['hora'],
+        'proximaHora': nextDoseTime,
         'cantidad': nuevaCantidad,
       };
 
@@ -922,7 +925,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
       try {
         await NotificationService.instance.acknowledgeDose(
           treatmentId: treatment['id'] as int,
-          horaInicio: treatment['hora'] as String,
+          horaInicio: nextDoseTime,
           frecuencia: treatment['frecuencia'] as String,
           medicationName: treatment['name'] as String,
           dosis: treatment['dosis'] as String,
@@ -936,14 +939,12 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
     if (!mounted) return;
 
-    setState(() {});
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           nuevaCantidad == 0
               ? "${treatment['name']} completado"
-              : "¡Buen trabajo! Quedan $nuevaCantidad",
+              : "¡Buen trabajo! Próxima toma: $nextDoseTime",
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -958,20 +959,35 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   void _markAsSkipped(Map<String, dynamic> treatment) async {
     final now = DateTime.now();
 
+    final String currentDoseTime = _getNextDoseTime(treatment);
+    final String nextDoseTime = _calculateNextDoseTime(treatment);
+
     final historyItem = {
       'medicamento': treatment['name'],
       'dosis': treatment['dosis'],
       'fecha': '${now.day}/${now.month}/${now.year}',
-      'hora': treatment['hora'],
+      'hora': currentDoseTime,
       'tomado': 0,
     };
 
     await AppDatabase.instance.insertHistory(historyItem);
 
+    final updatedTreatment = {
+      'id': treatment['id'],
+      'name': treatment['name'],
+      'dosis': treatment['dosis'],
+      'frecuencia': treatment['frecuencia'],
+      'hora': treatment['hora'],
+      'proximaHora': nextDoseTime,
+      'cantidad': treatment['cantidad'] ?? 0,
+    };
+
+    await AppDatabase.instance.updateTreatment(updatedTreatment);
+
     try {
       await NotificationService.instance.acknowledgeDose(
         treatmentId: treatment['id'] as int,
-        horaInicio: treatment['hora'] as String,
+        horaInicio: nextDoseTime,
         frecuencia: treatment['frecuencia'] as String,
         medicationName: treatment['name'] as String,
         dosis: treatment['dosis'] as String,
@@ -984,18 +1000,16 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
     if (!mounted) return;
 
-    setState(() {});
-
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          "Dosis omitida. Sonará en la próxima toma.",
-          style: TextStyle(
+          "Dosis omitida. Próxima toma: $nextDoseTime",
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
         ),
-        backgroundColor: Color(0xFFEF5350),
+        backgroundColor: const Color(0xFFEF5350),
         behavior: SnackBarBehavior.floating,
       ),
     );

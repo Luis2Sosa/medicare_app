@@ -21,7 +21,7 @@ class AppDatabase {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -35,6 +35,7 @@ class AppDatabase {
         dosis TEXT NOT NULL,
         frecuencia TEXT NOT NULL,
         hora TEXT NOT NULL,
+        proximaHora TEXT NOT NULL DEFAULT '',
         cantidad INTEGER NOT NULL DEFAULT 0
       )
     ''');
@@ -70,14 +71,31 @@ class AppDatabase {
         ALTER TABLE treatments ADD COLUMN cantidad INTEGER NOT NULL DEFAULT 0
       ''');
     }
+
+    if (oldVersion < 4) {
+      await db.execute('''
+        ALTER TABLE treatments ADD COLUMN proximaHora TEXT NOT NULL DEFAULT ''
+      ''');
+
+      await db.execute('''
+        UPDATE treatments
+        SET proximaHora = hora
+        WHERE proximaHora = ''
+      ''');
+    }
   }
 
   Future<int> insertTreatment(Map<String, dynamic> treatment) async {
     final db = await instance.database;
 
+    final treatmentWithNextHour = {
+      ...treatment,
+      'proximaHora': treatment['proximaHora'] ?? treatment['hora'],
+    };
+
     return await db.insert(
       'treatments',
-      treatment,
+      treatmentWithNextHour,
     );
   }
 
@@ -86,7 +104,7 @@ class AppDatabase {
 
     return await db.query(
       'treatments',
-      orderBy: 'hora ASC',
+      orderBy: 'proximaHora ASC',
     );
   }
 
@@ -103,9 +121,14 @@ class AppDatabase {
   Future<int> updateTreatment(Map<String, dynamic> treatment) async {
     final db = await instance.database;
 
+    final updatedTreatment = {
+      ...treatment,
+      'proximaHora': treatment['proximaHora'] ?? treatment['hora'],
+    };
+
     return await db.update(
       'treatments',
-      treatment,
+      updatedTreatment,
       where: 'id = ?',
       whereArgs: [treatment['id']],
     );
