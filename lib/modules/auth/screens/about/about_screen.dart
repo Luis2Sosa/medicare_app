@@ -1,21 +1,3 @@
-// =============================================================================
-// AboutScreen — versión mejorada
-// -----------------------------------------------------------------------------
-// Cambios principales:
-//  • Encabezado con halo animado (mismo lenguaje visual que la pantalla de
-//    inicio) y un ícono un poco más grande.
-//  • Botón de volver con fondo circular, más fácil de tocar.
-//  • Tarjetas de características con ícono en degradado (igual estilo que
-//    los "chips" del inicio) en vez de un solo color plano.
-//  • Todo el contenido se centra y se limita a un ancho máximo en pantallas
-//    grandes (tablets / phablets), para que no se vea estirado.
-//  • Tamaños de fuente, íconos y espacios calculados con clamp() según el
-//    ancho disponible: se ven bien tanto en un celular chico como en uno
-//    grande, sin desbordes ni elementos gigantes.
-//  • Se limita el escalado de fuente del sistema (accesibilidad) para que
-//    un texto muy grande no rompa el diseño.
-// =============================================================================
-
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
 
@@ -23,15 +5,15 @@ const Color _deepBlue = Color(0xFF123C66);
 const Color _textBlue = Color(0xFF1E3A5F);
 const Color _muted = Color(0xFF64748B);
 
-/// Evita el problema clásico de Dart donde `num.clamp(...)` devuelve `num`
-/// en vez de `double` y rompe la compilación al asignarlo a una variable
-/// `double`.
-double _clampD(num value, double lo, double hi) => value.clamp(lo, hi).toDouble();
+double _clampD(num value, double lo, double hi) {
+  return value.clamp(lo, hi).toDouble();
+}
 
 class _FeatureData {
   final IconData icon;
   final String title;
   final String desc;
+
   const _FeatureData(this.icon, this.title, this.desc);
 }
 
@@ -47,8 +29,6 @@ class _AboutScreenState extends State<AboutScreen>
   late final AnimationController _controller;
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
-
-  // Pulso suave e infinito detrás del ícono del encabezado.
   late final AnimationController _haloController;
 
   static const List<_FeatureData> _features = [
@@ -63,9 +43,9 @@ class _AboutScreenState extends State<AboutScreen>
       "Botones grandes y pasos sencillos, pensados para que cualquier persona pueda usarla sin complicaciones.",
     ),
     _FeatureData(
-      Icons.lock_outline_rounded,
-      "Privada y sin cuentas",
-      "No necesitas registrarte ni conectarte a internet. Toda tu información se guarda únicamente en tu teléfono.",
+      Icons.block_rounded,
+      "Sin anuncios ni cuenta",
+      "No necesitas registrarte ni ver anuncios para usar MediCare. La experiencia es simple, directa y tranquila.",
     ),
     _FeatureData(
       Icons.calendar_month_rounded,
@@ -77,6 +57,7 @@ class _AboutScreenState extends State<AboutScreen>
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -90,10 +71,12 @@ class _AboutScreenState extends State<AboutScreen>
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.08),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutCubic,
+      ),
+    );
 
     _controller.forward();
 
@@ -112,86 +95,85 @@ class _AboutScreenState extends State<AboutScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Limitamos el escalado de fuente del sistema para que un texto de
-    // accesibilidad muy grande no rompa el diseño, sin eliminarlo del todo.
-    final clampedTextScaler = MediaQuery.textScalerOf(context)
-        .clamp(minScaleFactor: 0.9, maxScaleFactor: 1.15);
+    final clampedTextScaler = MediaQuery.textScalerOf(context).clamp(
+      minScaleFactor: 0.9,
+      maxScaleFactor: 1.15,
+    );
 
     return MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: clampedTextScaler),
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: AppTheme.mainGradient,
-          ),
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              scrolledUnderElevation: 0,
-          elevation: 0,
-          centerTitle: true,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: Center(
-              child: _BackButton(onTap: () => Navigator.pop(context)),
-            ),
-          ),
-          title: const Text(
-            "Sobre MediCare",
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: _textBlue,
-              letterSpacing: 0.2,
-            ),
-          ),
+      data: MediaQuery.of(context).copyWith(textScaler: clampedTextScaler),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.mainGradient,
         ),
-        body: SafeArea(
-          top: false,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final m = _AboutMetrics.of(constraints);
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            scrolledUnderElevation: 0,
+            elevation: 0,
+            centerTitle: true,
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Center(
+                child: _BackButton(
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
+            ),
+            title: const Text(
+              "Sobre MediCare",
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: _textBlue,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+          body: SafeArea(
+            top: false,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final m = _AboutMetrics.of(constraints);
 
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(
-                      m.outerPaddingH,
-                      28,
-                      m.outerPaddingH,
-                      28,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 520),
-                        child: Column(
-                          children: [
-                            _header(m),
-                            const SizedBox(height: 30),
-                            _featuresCard(m),
-                            const SizedBox(height: 34),
-                            _footer(),
-                          ],
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        m.outerPaddingH,
+                        28,
+                        m.outerPaddingH,
+                        28,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 520),
+                          child: Column(
+                            children: [
+                              _header(m),
+                              const SizedBox(height: 30),
+                              _featuresCard(m),
+                              const SizedBox(height: 34),
+                              _footer(),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
-        )
     );
   }
 
-  // --- Encabezado: tarjeta hero con halo animado e ícono, en el mismo
-  // lenguaje visual (barra decorativa + jerarquía tipográfica) que el
-  // resto de la app, para que se sienta como una sola marca.
   Widget _header(_AboutMetrics m) {
     return Container(
       width: double.infinity,
@@ -203,11 +185,14 @@ class _AboutScreenState extends State<AboutScreen>
       ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppTheme.primaryBlue, _deepBlue],
+          colors: [
+            AppTheme.primaryBlue,
+            _deepBlue,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
             color: AppTheme.primaryBlue.withOpacity(0.35),
@@ -229,7 +214,9 @@ class _AboutScreenState extends State<AboutScreen>
                   builder: (context, _) {
                     final double t = _haloController.value;
                     final double pulseScale = 1.0 + (t * 0.14);
-                    final double pulseOpacity = _clampD(0.20 - (t * 0.08), 0.10, 0.20);
+                    final double pulseOpacity =
+                    _clampD(0.20 - (t * 0.08), 0.10, 0.20);
+
                     return Transform.scale(
                       scale: pulseScale,
                       child: Container(
@@ -261,8 +248,8 @@ class _AboutScreenState extends State<AboutScreen>
           ),
           const SizedBox(height: 18),
           Container(
-            width: 36,
-            height: 3.5,
+            width: 38,
+            height: 4,
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.55),
               borderRadius: BorderRadius.circular(4),
@@ -276,10 +263,10 @@ class _AboutScreenState extends State<AboutScreen>
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: m.headerTitleSize,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
                 color: Colors.white,
-                letterSpacing: 0.3,
-                height: 1.3,
+                letterSpacing: 0.2,
+                height: 1.25,
               ),
             ),
           ),
@@ -289,6 +276,7 @@ class _AboutScreenState extends State<AboutScreen>
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: m.headerDescSize,
+              fontWeight: FontWeight.w600,
               height: 1.55,
               color: Colors.white.withOpacity(0.92),
               letterSpacing: 0.1,
@@ -299,17 +287,15 @@ class _AboutScreenState extends State<AboutScreen>
     );
   }
 
-  // --- Lista de características: una sola tarjeta con renglones y
-  // divisores finos, todos en la misma paleta de marca.
   Widget _featuresCard(_AboutMetrics m) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        color: Colors.white.withOpacity(0.94),
+        borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 22,
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 24,
             offset: const Offset(0, 10),
           ),
         ],
@@ -320,8 +306,14 @@ class _AboutScreenState extends State<AboutScreen>
             _featureRow(_features[i], m),
             if (i != _features.length - 1)
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: m.featureRowPadding),
-                child: const Divider(height: 1, thickness: 1, color: Color(0xFFE9EEF5)),
+                padding: EdgeInsets.symmetric(
+                  horizontal: m.featureRowPadding,
+                ),
+                child: const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Color(0xFFE9EEF5),
+                ),
               ),
           ],
         ],
@@ -347,9 +339,13 @@ class _AboutScreenState extends State<AboutScreen>
                   AppTheme.primaryBlue.withOpacity(0.07),
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(17),
             ),
-            child: Icon(f.icon, size: m.featureIconSize, color: AppTheme.primaryBlue),
+            child: Icon(
+              f.icon,
+              size: m.featureIconSize,
+              color: AppTheme.primaryBlue,
+            ),
           ),
           SizedBox(width: m.featureGap),
           Expanded(
@@ -360,7 +356,7 @@ class _AboutScreenState extends State<AboutScreen>
                   f.title,
                   style: TextStyle(
                     fontSize: m.featureTitleSize,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
                     color: _textBlue,
                     letterSpacing: 0.1,
                   ),
@@ -370,6 +366,7 @@ class _AboutScreenState extends State<AboutScreen>
                   f.desc,
                   style: TextStyle(
                     fontSize: m.featureDescSize,
+                    fontWeight: FontWeight.w500,
                     height: 1.5,
                     color: _muted,
                   ),
@@ -382,7 +379,6 @@ class _AboutScreenState extends State<AboutScreen>
     );
   }
 
-  // PIE DE PÁGINA — marca y aviso de derechos reservados.
   Widget _footer() {
     return Column(
       children: [
@@ -419,14 +415,12 @@ class _AboutScreenState extends State<AboutScreen>
   }
 }
 
-// =============================================================================
-// _BackButton — botón de volver con fondo circular, más fácil de tocar
-// (cumple el tamaño mínimo de 44x44 recomendado para accesibilidad) y con
-// una pequeña animación al presionarlo.
-// =============================================================================
 class _BackButton extends StatefulWidget {
   final VoidCallback onTap;
-  const _BackButton({required this.onTap});
+
+  const _BackButton({
+    required this.onTap,
+  });
 
   @override
   State<_BackButton> createState() => _BackButtonState();
@@ -436,7 +430,9 @@ class _BackButtonState extends State<_BackButton> {
   bool _pressed = false;
 
   void _setPressed(bool value) {
-    if (_pressed != value) setState(() => _pressed = value);
+    if (_pressed != value) {
+      setState(() => _pressed = value);
+    }
   }
 
   @override
@@ -459,9 +455,11 @@ class _BackButtonState extends State<_BackButton> {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.primaryBlue.withOpacity(_pressed ? 0.18 : 0.10),
+              color: AppTheme.primaryBlue.withOpacity(
+                _pressed ? 0.18 : 0.10,
+              ),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 18,
               color: AppTheme.primaryBlue,
@@ -473,11 +471,6 @@ class _BackButtonState extends State<_BackButton> {
   }
 }
 
-// =============================================================================
-// _AboutMetrics — calcula tamaños, espacios y fuentes a partir del ancho
-// disponible, con clamp() en cada valor para que el diseño nunca se rompa
-// (ni en un celular muy chico ni en uno muy grande).
-// =============================================================================
 class _AboutMetrics {
   final double outerPaddingH;
   final double headerPaddingH;
@@ -495,7 +488,7 @@ class _AboutMetrics {
   final double featureRowPadding;
   final double featureGap;
 
-  _AboutMetrics._({
+  const _AboutMetrics._({
     required this.outerPaddingH,
     required this.headerPaddingH,
     required this.headerPaddingTop,
@@ -517,7 +510,6 @@ class _AboutMetrics {
     final double width =
     constraints.maxWidth.isFinite ? constraints.maxWidth : 390.0;
 
-    // 390 ≈ ancho de referencia (celular mediano).
     final double scale = _clampD(width / 390.0, 0.82, 1.30);
     final bool isCompactWidth = width < 360;
 

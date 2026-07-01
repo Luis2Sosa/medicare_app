@@ -81,6 +81,8 @@ class NotificationService {
       hora: horaInicio,
       medicationName: medicationName,
       dosis: dosis,
+
+
     );
 
     print("ALARMA DEL TRATAMIENTO $treatmentId PROGRAMADA PARA $horaInicio");
@@ -155,7 +157,6 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
       UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 

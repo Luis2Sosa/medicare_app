@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:medicare_app/core/app_theme.dart';
-import 'package:medicare_app/core/database/app_database.dart';
 
 // 🔵 IMPORTS DE PANTALLAS
 import 'package:medicare_app/modules/auth/screens/start_screen.dart';
@@ -18,29 +17,6 @@ void main() async {
     await NotificationService.instance.requestPermissions();
   } catch (e) {
     debugPrint("Error iniciando notificaciones: $e");
-  }
-
-  try {
-    final treatments = await AppDatabase.instance.getTreatments();
-
-    for (final t in treatments) {
-      try {
-        final String horaParaAlarma =
-        (t['proximaHora'] ?? t['hora'] ?? '12:00 AM') as String;
-
-        await NotificationService.instance.scheduleRemindersForTreatment(
-          treatmentId: t['id'] as int,
-          medicationName: t['name'] as String,
-          dosis: t['dosis'] as String,
-          horaInicio: horaParaAlarma,
-          frecuencia: t['frecuencia'] as String,
-        );
-      } catch (e) {
-        debugPrint("Error reprogramando alarma: $e");
-      }
-    }
-  } catch (e) {
-    debugPrint("Error leyendo tratamientos guardados: $e");
   }
 
   runApp(const MediCareApp());
