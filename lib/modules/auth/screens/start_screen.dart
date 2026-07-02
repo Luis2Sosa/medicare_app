@@ -84,9 +84,16 @@ class _StartScreenState extends State<StartScreen>
             gradient: AppTheme.mainGradient,
           ),
           child: SafeArea(
+            // "minimum" garantiza un respiro extra incluso si el sistema
+            // reporta un inset muy pequeño (algunos celulares con gestos).
+            minimum: const EdgeInsets.only(bottom: 8),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final m = _ScreenMetrics.of(constraints);
+                // MediaQuery.viewPadding.bottom NO es removido por SafeArea,
+                // así que aquí sabemos si el celular tiene barra de 3 botones
+                // (inset grande) o gestos/nada (inset chico o cero).
+                final systemNavInset = MediaQuery.of(context).viewPadding.bottom;
+                final m = _ScreenMetrics.of(constraints, systemNavInset);
 
                 return SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
@@ -688,58 +695,84 @@ class _ScreenMetrics {
     required this.isCompactWidth,
   });
 
-  factory _ScreenMetrics.of(BoxConstraints constraints) {
+  factory _ScreenMetrics.of(
+      BoxConstraints constraints, [
+        double systemNavInset = 0,
+      ]) {
     final width = constraints.maxWidth.isFinite ? constraints.maxWidth : 390.0;
     final height = constraints.maxHeight.isFinite ? constraints.maxHeight : 760.0;
 
-    final widthScale = _clampD(width / 390.0, 0.82, 1.16);
-    final heightScale = _clampD(height / 760.0, 0.80, 1.10);
+    // Escala en base a un diseño de referencia de 390x760 (iPhone estándar).
+    // Bajamos el piso de 0.82 a 0.70 para que celulares muy chicos (320-360
+    // de ancho, <600 de alto) también reduzcan tamaños en vez de desbordar.
+    final widthScale = _clampD(width / 390.0, 0.70, 1.16);
+    final heightScale = _clampD(height / 760.0, 0.66, 1.10);
     final scale = math.min(widthScale, heightScale);
 
     final isCompactHeight = height < 700;
+    // Pantallas muy chicas (ej. celulares gama baja, ~360x640 o menos).
+    final isExtraCompactHeight = height < 620;
     final isCompactWidth = width < 370;
 
+    // Si el celular tiene barra de navegación de 3 botones, el inset del
+    // sistema suele ser bastante mayor (~40+) que el de gestos (~16-34) o
+    // el de celulares sin ninguna barra (0). Cuando detectamos una barra
+    // "gorda" agregamos un pequeño respiro visual extra para que los
+    // botones de la app no queden pegados a los botones del sistema.
+    final hasChunkyNavBar = systemNavInset > 30;
+    final extraBottomBreathingRoom = hasChunkyNavBar ? 10.0 : 4.0;
+
     return _ScreenMetrics._(
-      horizontalPadding: isCompactWidth ? 18 : 22,
+      horizontalPadding: isCompactWidth ? 16 : 22,
       topPadding: isCompactHeight ? 0 : 6,
-      bottomPadding: isCompactHeight ? 14 : 20,
+      bottomPadding:
+      (isExtraCompactHeight ? 10 : (isCompactHeight ? 14 : 20)) +
+          extraBottomBreathingRoom,
 
-      logoSize: _clampD((isCompactHeight ? 120 : 150) * scale, 110, 165),
-      logoTitleSize: _clampD(36 * scale, 31, 43),
+      logoSize: _clampD(
+        (isExtraCompactHeight ? 96 : (isCompactHeight ? 120 : 150)) * scale,
+        88,
+        165,
+      ),
+      logoTitleSize: _clampD(36 * scale, 27, 43),
       logoSubtitleGap: isCompactHeight ? 8 : 12,
-      headerTextSize: _clampD(15.5 * scale, 14, 18),
+      headerTextSize: _clampD(15.5 * scale, 13, 18),
 
-      mainGap: isCompactHeight ? 28 : 42,
+      mainGap: isExtraCompactHeight ? 20 : (isCompactHeight ? 28 : 42),
 
-      appNameSize: _clampD(33 * scale, 29, 39),
-      sloganSmallSize: _clampD(27 * scale, 23, 31),
-      sloganBigSize: _clampD(31 * scale, 27, 36),
-      bodyTextSize: _clampD(16 * scale, 14.5, 18),
-      cardPadding: _clampD(23 * scale, 19, 27),
-      descriptionLineHeight: _clampD(72 * scale, 60, 82),
-      clockBox: _clampD(74 * scale, 60, 84),
-      clockIcon: _clampD(40 * scale, 34, 46),
+      appNameSize: _clampD(33 * scale, 26, 39),
+      sloganSmallSize: _clampD(27 * scale, 20, 31),
+      sloganBigSize: _clampD(31 * scale, 23, 36),
+      bodyTextSize: _clampD(16 * scale, 13, 18),
+      cardPadding: _clampD(23 * scale, 15, 27),
+      descriptionLineHeight: _clampD(72 * scale, 50, 82),
+      clockBox: _clampD(74 * scale, 52, 84),
+      clockIcon: _clampD(40 * scale, 28, 46),
 
-      featureTopGap: isCompactHeight ? 14 : 20,
-      featureHeight: _clampD(104 * scale, 94, 116),
+      featureTopGap: isExtraCompactHeight ? 10 : (isCompactHeight ? 14 : 20),
+      featureHeight: _clampD(104 * scale, 82, 116),
       chipGap: isCompactWidth ? 8 : 12,
-      chipPaddingV: _clampD(12 * scale, 10, 14),
-      chipPaddingH: isCompactWidth ? 5 : 7,
-      chipIconSize: _clampD(29 * scale, 25, 33),
-      chipFontSize: _clampD(14.5 * scale, 13, 16),
+      chipPaddingV: _clampD(12 * scale, 8, 14),
+      chipPaddingH: isCompactWidth ? 4 : 7,
+      chipIconSize: _clampD(29 * scale, 21, 33),
+      chipFontSize: _clampD(14.5 * scale, 11.5, 16),
 
-      buttonHeight: _clampD((isCompactHeight ? 58 : 66) * scale, 54, 70),
-      buttonFontSize: _clampD(20.5 * scale, 18, 23),
-      buttonArrowSize: _clampD(25 * scale, 22, 28),
+      buttonHeight: _clampD(
+        (isExtraCompactHeight ? 52 : (isCompactHeight ? 58 : 66)) * scale,
+        48,
+        70,
+      ),
+      buttonFontSize: _clampD(20.5 * scale, 16, 23),
+      buttonArrowSize: _clampD(25 * scale, 20, 28),
 
-      aboutButtonHeight: _clampD(52 * scale, 48, 58),
-      aboutIconSize: _clampD(20 * scale, 18, 22),
-      aboutTextSize: _clampD(16.5 * scale, 15, 18),
+      aboutButtonHeight: _clampD(52 * scale, 44, 58),
+      aboutIconSize: _clampD(20 * scale, 16, 22),
+      aboutTextSize: _clampD(16.5 * scale, 13.5, 18),
 
-      sectionGap: isCompactHeight ? 14 : 18,
-      smallGap: isCompactHeight ? 10 : 13,
+      sectionGap: isExtraCompactHeight ? 10 : (isCompactHeight ? 14 : 18),
+      smallGap: isExtraCompactHeight ? 8 : (isCompactHeight ? 10 : 13),
       tinyGap: 6,
-      buttonSpace: isCompactHeight ? 24 : 34,
+      buttonSpace: isExtraCompactHeight ? 16 : (isCompactHeight ? 24 : 34),
 
       isCompactHeight: isCompactHeight,
       isCompactWidth: isCompactWidth,

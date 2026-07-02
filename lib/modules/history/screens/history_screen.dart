@@ -32,55 +32,88 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 400;
-
     final tomados = historyData.where((e) => e['tomado'] == 1).length;
     final omitidos = historyData.length - tomados;
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: AppTheme.mainGradient,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF1E3A5F),
-          elevation: 0,
-          centerTitle: true,
-          title: Text(
-            "Historial",
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: isSmallScreen ? 23 : 27,
-            ),
-          ),
-          actions: [
-            Padding(
-              padding: EdgeInsets.only(right: isSmallScreen ? 8 : 12),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFEBEE),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: IconButton(
-                  onPressed: _confirmDeleteHistory,
-                  icon: Icon(
-                    Icons.delete_forever_rounded,
-                    color: const Color(0xFFEF5350),
-                    size: isSmallScreen ? 28 : 35,
-                  ),
+    final clampedTextScaler = MediaQuery.textScalerOf(context).clamp(
+      minScaleFactor: 0.9,
+      maxScaleFactor: 1.12,
+    );
+
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: clampedTextScaler),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.mainGradient,
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF1E3A5F),
+            elevation: 0,
+            centerTitle: true,
+            title: const FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                "Historial",
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 27,
                 ),
               ),
             ),
-          ],
+            actions: [
+              Builder(
+                builder: (context) {
+                  final width = MediaQuery.of(context).size.width;
+                  final isSmall = width < 360;
+
+                  return Padding(
+                    padding: EdgeInsets.only(right: isSmall ? 8 : 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFEBEE),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: IconButton(
+                        tooltip: "Borrar historial",
+                        onPressed: _confirmDeleteHistory,
+                        icon: Icon(
+                          Icons.delete_forever_rounded,
+                          color: const Color(0xFFEF5350),
+                          size: isSmall ? 28 : 32,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          body: SafeArea(
+            top: false,
+            bottom: true,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final r = _Responsive(
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
+                );
+
+                if (isLoading) {
+                  return _buildLoadingState();
+                }
+
+                if (historyData.isEmpty) {
+                  return _emptyState(r);
+                }
+
+                return _buildList(tomados, omitidos, r);
+              },
+            ),
+          ),
         ),
-        body: isLoading
-            ? _buildLoadingState()
-            : historyData.isEmpty
-            ? _emptyState(isSmallScreen)
-            : _buildList(tomados, omitidos, isSmallScreen),
       ),
     );
   }
@@ -93,16 +126,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildList(int tomados, int omitidos, bool isSmallScreen) {
+  Widget _buildList(int tomados, int omitidos, _Responsive r) {
+    final bottomSafe = MediaQuery.of(context).padding.bottom;
+
     return Column(
       children: [
         Container(
           width: double.infinity,
           padding: EdgeInsets.fromLTRB(
-            isSmallScreen ? 14 : 20,
-            isSmallScreen ? 10 : 14,
-            isSmallScreen ? 14 : 20,
-            isSmallScreen ? 10 : 14,
+            r.pagePadding,
+            r.statsPaddingV,
+            r.pagePadding,
+            r.statsPaddingV,
           ),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.45),
@@ -114,30 +149,31 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 count: tomados,
                 label: "Tomados",
                 color: const Color(0xFF10B981),
-                isSmallScreen: isSmallScreen,
+                r: r,
               ),
-              SizedBox(width: isSmallScreen ? 8 : 12),
+              SizedBox(width: r.scale(8)),
               _statBadge(
                 icon: Icons.cancel_rounded,
                 count: omitidos,
                 label: "Omitidos",
                 color: const Color(0xFFEF4444),
-                isSmallScreen: isSmallScreen,
+                r: r,
               ),
             ],
           ),
         ),
         Expanded(
           child: ListView.builder(
+            physics: const BouncingScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
-              isSmallScreen ? 14 : 20,
-              isSmallScreen ? 12 : 16,
-              isSmallScreen ? 14 : 20,
-              isSmallScreen ? 70 : 90,
+              r.pagePadding,
+              r.listTopPadding,
+              r.pagePadding,
+              r.listBottomPadding + bottomSafe,
             ),
             itemCount: historyData.length,
             itemBuilder: (context, index) {
-              return _historyCard(historyData[index], isSmallScreen);
+              return _historyCard(historyData[index], r);
             },
           ),
         ),
@@ -150,11 +186,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
     required int count,
     required String label,
     required Color color,
-    required bool isSmallScreen,
+    required _Responsive r,
   }) {
     return Expanded(
       child: Container(
-        height: isSmallScreen ? 70 : 86,
+        height: r.statHeight,
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.92),
           borderRadius: BorderRadius.circular(20),
@@ -173,31 +209,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: isSmallScreen ? 26 : 34),
-            SizedBox(width: isSmallScreen ? 8 : 12),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  count.toString(),
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 22 : 30,
-                    fontWeight: FontWeight.w900,
-                    color: color,
-                    height: 1,
+            Icon(icon, color: color, size: r.statIconSize),
+            SizedBox(width: r.scale(8)),
+            Flexible(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    count.toString(),
+                    style: TextStyle(
+                      fontSize: r.font(28),
+                      fontWeight: FontWeight.w900,
+                      color: color,
+                      height: 1,
+                    ),
                   ),
-                ),
-                SizedBox(height: isSmallScreen ? 2 : 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 13 : 16,
-                    fontWeight: FontWeight.w900,
-                    color: color,
+                  SizedBox(height: r.scale(3)),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: r.font(15),
+                        fontWeight: FontWeight.w900,
+                        color: color,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -205,20 +246,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _historyCard(Map<String, dynamic> item, bool isSmallScreen) {
+  Widget _historyCard(Map<String, dynamic> item, _Responsive r) {
     final bool tomado = item['tomado'] == 1;
     final Color mainColor =
     tomado ? const Color(0xFF10B981) : const Color(0xFFEF4444);
 
     return Container(
-      margin: EdgeInsets.only(bottom: isSmallScreen ? 12 : 16),
-      padding: EdgeInsets.all(isSmallScreen ? 12 : 18),
+      margin: EdgeInsets.only(bottom: r.cardBottomMargin),
+      padding: EdgeInsets.all(r.cardPadding),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: mainColor.withOpacity(0.45),
-          width: 2.2,
+          width: 2,
         ),
         boxShadow: [
           BoxShadow(
@@ -233,8 +274,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Row(
             children: [
               Container(
-                width: isSmallScreen ? 48 : 58,
-                height: isSmallScreen ? 48 : 58,
+                width: r.statusIconBox,
+                height: r.statusIconBox,
                 decoration: BoxDecoration(
                   color: mainColor,
                   shape: BoxShape.circle,
@@ -242,10 +283,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Icon(
                   tomado ? Icons.check_rounded : Icons.close_rounded,
                   color: Colors.white,
-                  size: isSmallScreen ? 24 : 34,
+                  size: r.statusIconSize,
                 ),
               ),
-              SizedBox(width: isSmallScreen ? 12 : 16),
+              SizedBox(width: r.scale(12)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,7 +294,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Text(
                       item['medicamento'] ?? 'Medicamento',
                       style: TextStyle(
-                        fontSize: isSmallScreen ? 18 : 25,
+                        fontSize: r.font(23),
                         fontWeight: FontWeight.w900,
                         color: const Color(0xFF1E3A5F),
                         height: 1.1,
@@ -261,11 +302,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: isSmallScreen ? 4 : 6),
+                    SizedBox(height: r.scale(4)),
                     Text(
                       item['fecha'] ?? '00/00/0000',
                       style: TextStyle(
-                        fontSize: isSmallScreen ? 14 : 18,
+                        fontSize: r.font(16),
                         color: const Color(0xFF5B7C99),
                         fontWeight: FontWeight.w700,
                       ),
@@ -275,11 +316,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             ],
           ),
-          SizedBox(height: isSmallScreen ? 10 : 14),
+          SizedBox(height: r.cardInnerGap),
           Container(
             width: double.infinity,
             padding: EdgeInsets.symmetric(
-              vertical: isSmallScreen ? 8 : 12,
+              vertical: r.timeBoxPaddingV,
+              horizontal: 8,
             ),
             decoration: BoxDecoration(
               color: const Color(0xFFFFF3E0),
@@ -294,26 +336,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
               children: [
                 Icon(
                   Icons.access_time_rounded,
-                  size: isSmallScreen ? 20 : 27,
+                  size: r.scale(24),
                   color: const Color(0xFFF57C00),
                 ),
-                SizedBox(width: isSmallScreen ? 8 : 10),
-                Text(
-                  item['hora'] ?? '00:00 AM',
-                  style: TextStyle(
-                    fontSize: isSmallScreen ? 18 : 24,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFFF57C00),
+                SizedBox(width: r.scale(8)),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      item['hora'] ?? '00:00 AM',
+                      style: TextStyle(
+                        fontSize: r.font(23),
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFFF57C00),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          SizedBox(height: isSmallScreen ? 10 : 12),
+          SizedBox(height: r.scale(10)),
           Container(
             width: double.infinity,
             padding: EdgeInsets.symmetric(
-              vertical: isSmallScreen ? 8 : 11,
+              vertical: r.statusBoxPaddingV,
+              horizontal: 8,
             ),
             decoration: BoxDecoration(
               color: mainColor.withOpacity(0.10),
@@ -327,7 +375,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               tomado ? "MEDICAMENTO TOMADO" : "NO SE TOMÓ",
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: isSmallScreen ? 13 : 17,
+                fontSize: r.font(15.5),
                 fontWeight: FontWeight.w900,
                 color: mainColor,
                 letterSpacing: 0.2,
@@ -339,23 +387,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _emptyState(bool isSmallScreen) {
+  Widget _emptyState(_Responsive r) {
+    final bottomSafe = MediaQuery.of(context).padding.bottom;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+            r.pagePadding,
+            r.emptyTopPadding,
+            r.pagePadding,
+            r.emptyBottomPadding + bottomSafe,
+          ),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: constraints.maxHeight,
+              minHeight: constraints.maxHeight -
+                  r.emptyTopPadding -
+                  r.emptyBottomPadding,
             ),
             child: Center(
               child: Container(
-                margin: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 20 : 28,
-                ),
-                padding: EdgeInsets.all(
-                  isSmallScreen ? 22 : 28,
-                ),
+                width: double.infinity,
+                constraints: BoxConstraints(maxWidth: r.maxContentWidth),
+                padding: EdgeInsets.all(r.emptyCardPadding),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.94),
                   borderRadius: BorderRadius.circular(26),
@@ -376,30 +431,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   children: [
                     Icon(
                       Icons.history_rounded,
-                      size: isSmallScreen ? 60 : 76,
+                      size: r.emptyIconSize,
                       color: const Color(0xFF1E3A5F),
                     ),
-
-                    SizedBox(height: isSmallScreen ? 14 : 18),
-
+                    SizedBox(height: r.scale(14)),
                     Text(
                       "Sin historial aún",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: isSmallScreen ? 22 : 28,
+                        fontSize: r.font(26),
                         fontWeight: FontWeight.w900,
                         color: const Color(0xFF1E3A5F),
                       ),
                     ),
-
-                    SizedBox(height: isSmallScreen ? 10 : 12),
-
+                    SizedBox(height: r.scale(10)),
                     Text(
                       "Aquí aparecerán los medicamentos\nque hayas tomado u omitido.",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: isSmallScreen ? 15 : 18,
-                        height: 1.4,
+                        fontSize: r.font(16.5),
+                        height: 1.35,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF5B7C99),
                       ),
@@ -415,18 +466,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _confirmDeleteHistory() {
-    final isSmallScreen = MediaQuery.of(context).size.width < 400;
+    final width = MediaQuery.of(context).size.width;
+    final isSmallScreen = width < 400;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 18 : 32,
+          vertical: 24,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
         ),
         contentPadding: EdgeInsets.fromLTRB(
-          isSmallScreen ? 20 : 24,
-          isSmallScreen ? 20 : 24,
-          isSmallScreen ? 20 : 24,
+          isSmallScreen ? 18 : 24,
+          isSmallScreen ? 18 : 24,
+          isSmallScreen ? 18 : 24,
           isSmallScreen ? 16 : 20,
         ),
         title: Column(
@@ -449,14 +505,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
           ],
         ),
-        content: Text(
-          "Esta acción eliminará todo el historial de medicamentos tomados y omitidos.",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: isSmallScreen ? 14 : 17,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF5B7C99),
-            height: 1.4,
+        content: SingleChildScrollView(
+          child: Text(
+            "Esta acción eliminará todo el historial de medicamentos tomados y omitidos.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: isSmallScreen ? 14 : 17,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF5B7C99),
+              height: 1.4,
+            ),
           ),
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -507,5 +565,70 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ],
       ),
     );
+  }
+}
+
+class _Responsive {
+  final double width;
+  final double height;
+
+  const _Responsive({
+    required this.width,
+    required this.height,
+  });
+
+  bool get isTablet => width >= 600;
+  bool get compactWidth => width < 360;
+  bool get compactHeight => height < 680;
+
+  double get maxContentWidth => isTablet ? 560 : double.infinity;
+
+  double get _factor => _clamp(width / 390, 0.82, 1.16);
+
+  double scale(double base) => base * _factor;
+
+  double font(double base) {
+    final eased = 1 + (_factor - 1) * 0.50;
+    return base * _clamp(eased, 0.88, 1.10);
+  }
+
+  double get pagePadding => compactWidth ? 14 : scale(20);
+
+  double get statsPaddingV => compactHeight ? scale(10) : scale(14);
+
+  double get listTopPadding => compactHeight ? scale(12) : scale(16);
+
+  double get listBottomPadding => compactHeight ? scale(76) : scale(90);
+
+  double get statHeight => compactHeight ? scale(68) : scale(82);
+
+  double get statIconSize => compactHeight ? scale(25) : scale(32);
+
+  double get cardPadding => compactHeight ? scale(12) : scale(17);
+
+  double get cardBottomMargin => compactHeight ? scale(12) : scale(16);
+
+  double get statusIconBox => compactHeight ? scale(46) : scale(56);
+
+  double get statusIconSize => compactHeight ? scale(24) : scale(32);
+
+  double get cardInnerGap => compactHeight ? scale(10) : scale(14);
+
+  double get timeBoxPaddingV => compactHeight ? scale(8) : scale(11);
+
+  double get statusBoxPaddingV => compactHeight ? scale(8) : scale(10);
+
+  double get emptyTopPadding => compactHeight ? scale(28) : scale(44);
+
+  double get emptyBottomPadding => compactHeight ? scale(28) : scale(44);
+
+  double get emptyCardPadding => compactHeight ? scale(22) : scale(28);
+
+  double get emptyIconSize => compactHeight ? scale(58) : scale(74);
+
+  static double _clamp(double value, double min, double max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
   }
 }

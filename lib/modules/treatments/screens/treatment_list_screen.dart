@@ -56,17 +56,9 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
     final lower = frecuencia.toLowerCase();
 
-    if (lower.contains('minuto')) {
-      return number;
-    }
-
-    if (lower.contains('día') || lower.contains('dia')) {
-      return number * 24 * 60;
-    }
-
-    if (lower.contains('semana')) {
-      return number * 7 * 24 * 60;
-    }
+    if (lower.contains('minuto')) return number;
+    if (lower.contains('día') || lower.contains('dia')) return number * 24 * 60;
+    if (lower.contains('semana')) return number * 7 * 24 * 60;
 
     return number * 60;
   }
@@ -99,43 +91,67 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 400;
-    final data = treatments;
+    final clampedTextScaler = MediaQuery.textScalerOf(context).clamp(
+      minScaleFactor: 0.9,
+      maxScaleFactor: 1.12,
+    );
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: AppTheme.mainGradient,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const Text(
-            "Mis Medicamentos",
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 26,
-              letterSpacing: 0.3,
-            ),
-          ),
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF1E3A5F),
-          centerTitle: true,
-          elevation: 0,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(1),
-            child: Container(
-              color: const Color(0xFFE8EEF2),
-              height: 1,
-            ),
-          ),
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: clampedTextScaler),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.mainGradient,
         ),
-        body: isLoading
-            ? _buildLoadingState()
-            : (data.isEmpty
-            ? _emptyState(isSmallScreen)
-            : _buildList(data, isSmallScreen)),
-        floatingActionButton: _addButton(),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: const FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                "Mis Medicamentos",
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 26,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF1E3A5F),
+            centerTitle: true,
+            elevation: 0,
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(
+                color: const Color(0xFFE8EEF2),
+                height: 1,
+              ),
+            ),
+          ),
+          body: SafeArea(
+            top: false,
+            bottom: true,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final r = _Responsive(
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
+                );
+
+                if (isLoading) {
+                  return _buildLoadingState();
+                }
+
+                if (treatments.isEmpty) {
+                  return _emptyState(r);
+                }
+
+                return _buildList(treatments, r);
+              },
+            ),
+          ),
+          floatingActionButton: _addButton(),
+        ),
       ),
     );
   }
@@ -149,14 +165,16 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     );
   }
 
-  Widget _buildList(List<Map<String, dynamic>> data, bool isSmallScreen) {
+  Widget _buildList(List<Map<String, dynamic>> data, _Responsive r) {
+    final bottomSafe = MediaQuery.of(context).padding.bottom;
+
     return Column(
       children: [
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(
-            horizontal: isSmallScreen ? 16 : 20,
-            vertical: isSmallScreen ? 12 : 16,
+            horizontal: r.pagePadding,
+            vertical: r.headerPadding,
           ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -172,17 +190,20 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
             children: [
               Text(
                 "Recuerda tomar tu medicamento",
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: isSmallScreen ? 18 : 22,
+                  fontSize: r.font(21),
                   fontWeight: FontWeight.w900,
                   color: const Color(0xFF1E3A5F),
+                  height: 1.15,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 "${data.length} ${data.length == 1 ? 'pendiente para hoy' : 'pendientes para hoy'}",
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: isSmallScreen ? 16 : 20,
+                  fontSize: r.font(18.5),
                   color: const Color(0xFF5B7C99),
                   fontWeight: FontWeight.w700,
                 ),
@@ -192,15 +213,16 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
         ),
         Expanded(
           child: ListView.builder(
+            physics: const BouncingScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
-              isSmallScreen ? 16 : 20,
-              isSmallScreen ? 12 : 16,
-              isSmallScreen ? 16 : 20,
-              isSmallScreen ? 12 : 20,
+              r.pagePadding,
+              r.listTopPadding,
+              r.pagePadding,
+              r.listBottomPadding + bottomSafe + 74,
             ),
             itemCount: data.length,
             itemBuilder: (context, index) {
-              return _treatmentCard(data[index], index, isSmallScreen);
+              return _treatmentCard(data[index], index, r);
             },
           ),
         ),
@@ -211,20 +233,27 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   Widget _treatmentCard(
       Map<String, dynamic> treatment,
       int index,
-      bool isSmallScreen,
+      _Responsive r,
       ) {
     final String nextDoseTime = _getNextDoseTime(treatment);
 
     return Container(
-      margin: EdgeInsets.only(bottom: isSmallScreen ? 14 : 18),
-      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+      margin: EdgeInsets.only(bottom: r.cardBottomMargin),
+      padding: EdgeInsets.all(r.cardPadding),
       decoration: BoxDecoration(
         color: const Color(0xFFF5F9FC),
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: const Color(0xFF64B5F6),
-          width: 2.2,
+          width: 2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.045),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,8 +261,8 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
           Row(
             children: [
               Container(
-                width: isSmallScreen ? 54 : 64,
-                height: isSmallScreen ? 54 : 64,
+                width: r.mainIconBox,
+                height: r.mainIconBox,
                 decoration: BoxDecoration(
                   color: const Color(0xFFE3F2FD),
                   borderRadius: BorderRadius.circular(18),
@@ -241,10 +270,10 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                 child: Icon(
                   Icons.medication_rounded,
                   color: const Color(0xFF1976D2),
-                  size: isSmallScreen ? 30 : 36,
+                  size: r.mainIconSize,
                 ),
               ),
-              SizedBox(width: isSmallScreen ? 12 : 16),
+              SizedBox(width: r.scale(12)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,9 +281,10 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                     Text(
                       treatment['name'] ?? 'Medicamento',
                       style: TextStyle(
-                        fontSize: isSmallScreen ? 22 : 26,
+                        fontSize: r.font(24),
                         fontWeight: FontWeight.w900,
                         color: const Color(0xFF1E3A5F),
+                        height: 1.12,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -263,7 +293,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                     Text(
                       treatment['dosis'] ?? '1 tableta',
                       style: TextStyle(
-                        fontSize: isSmallScreen ? 15 : 17,
+                        fontSize: r.font(16),
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF64748B),
                       ),
@@ -274,9 +304,9 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               const SizedBox(width: 8),
               InkWell(
                 borderRadius: BorderRadius.circular(14),
-                onTap: () => _showOptions(treatment, index, isSmallScreen),
+                onTap: () => _showOptions(treatment, index, r),
                 child: Container(
-                  padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
+                  padding: EdgeInsets.all(r.optionIconPadding),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE3F2FD),
                     borderRadius: BorderRadius.circular(14),
@@ -284,18 +314,20 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   child: Icon(
                     Icons.more_horiz_rounded,
                     color: const Color(0xFF1976D2),
-                    size: isSmallScreen ? 22 : 26,
+                    size: r.scale(25),
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: isSmallScreen ? 18 : 22),
+
+          SizedBox(height: r.cardSectionGap),
+
           Container(
             width: double.infinity,
             padding: EdgeInsets.symmetric(
-              horizontal: isSmallScreen ? 16 : 18,
-              vertical: isSmallScreen ? 14 : 16,
+              horizontal: r.nextDosePaddingH,
+              vertical: r.nextDosePaddingV,
             ),
             decoration: BoxDecoration(
               color: const Color(0xFFFFF3E0),
@@ -308,8 +340,8 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
             child: Row(
               children: [
                 Container(
-                  width: isSmallScreen ? 42 : 48,
-                  height: isSmallScreen ? 42 : 48,
+                  width: r.clockIconBox,
+                  height: r.clockIconBox,
                   decoration: const BoxDecoration(
                     color: Color(0xFFFF9800),
                     shape: BoxShape.circle,
@@ -317,10 +349,10 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   child: Icon(
                     Icons.access_time_rounded,
                     color: Colors.white,
-                    size: isSmallScreen ? 24 : 28,
+                    size: r.clockIconSize,
                   ),
                 ),
-                SizedBox(width: isSmallScreen ? 12 : 16),
+                SizedBox(width: r.scale(12)),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -328,7 +360,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                       Text(
                         "Próxima toma",
                         style: TextStyle(
-                          fontSize: isSmallScreen ? 14 : 16,
+                          fontSize: r.font(15),
                           fontWeight: FontWeight.w800,
                           color: const Color(0xFFB45309),
                         ),
@@ -337,9 +369,10 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                       Text(
                         nextDoseTime,
                         style: TextStyle(
-                          fontSize: isSmallScreen ? 26 : 30,
+                          fontSize: r.font(28),
                           fontWeight: FontWeight.w900,
                           color: const Color(0xFF1E3A5F),
+                          height: 1.08,
                         ),
                       ),
                     ],
@@ -348,14 +381,16 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               ],
             ),
           ),
-          SizedBox(height: isSmallScreen ? 12 : 14),
+
+          SizedBox(height: r.smallGap),
+
           Row(
             children: [
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: r.infoPaddingH,
+                    vertical: r.infoPaddingV,
                   ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE3F2FD),
@@ -363,17 +398,17 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.repeat_rounded,
-                        color: Color(0xFF1976D2),
-                        size: 22,
+                        color: const Color(0xFF1976D2),
+                        size: r.scale(21),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           treatment['frecuencia'] ?? 'Cada 8 horas',
                           style: TextStyle(
-                            fontSize: isSmallScreen ? 14 : 16,
+                            fontSize: r.font(15),
                             fontWeight: FontWeight.w800,
                             color: const Color(0xFF1565C0),
                           ),
@@ -386,9 +421,9 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               ),
               const SizedBox(width: 10),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
+                padding: EdgeInsets.symmetric(
+                  horizontal: r.infoPaddingH,
+                  vertical: r.infoPaddingV,
                 ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F5F9),
@@ -399,7 +434,7 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                       ? "Quedan ${treatment['cantidad']}"
                       : "En uso",
                   style: TextStyle(
-                    fontSize: isSmallScreen ? 14 : 16,
+                    fontSize: r.font(15),
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF1E3A5F),
                   ),
@@ -407,24 +442,34 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
               ),
             ],
           ),
-          SizedBox(height: isSmallScreen ? 14 : 18),
+
+          SizedBox(height: r.buttonGap),
+
           Row(
             children: [
               Expanded(
                 child: SizedBox(
-                  height: isSmallScreen ? 48 : 54,
+                  height: r.actionButtonHeight,
                   child: ElevatedButton.icon(
                     onPressed: () => _markAsTaken(treatment),
-                    icon: const Icon(Icons.check_circle_rounded),
-                    label: const Text("Tomado"),
+                    icon: Icon(
+                      Icons.check_circle_rounded,
+                      size: r.scale(21),
+                    ),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        "Tomado",
+                        style: TextStyle(
+                          fontSize: r.font(16),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF10B981),
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      textStyle: TextStyle(
-                        fontSize: isSmallScreen ? 15 : 17,
-                        fontWeight: FontWeight.w900,
-                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                       ),
@@ -432,22 +477,30 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: SizedBox(
-                  height: isSmallScreen ? 48 : 54,
+                  height: r.actionButtonHeight,
                   child: ElevatedButton.icon(
                     onPressed: () => _markAsSkipped(treatment),
-                    icon: const Icon(Icons.cancel_rounded),
-                    label: const Text("Omitir"),
+                    icon: Icon(
+                      Icons.cancel_rounded,
+                      size: r.scale(21),
+                    ),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        "Omitir",
+                        style: TextStyle(
+                          fontSize: r.font(16),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEF5350),
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      textStyle: TextStyle(
-                        fontSize: isSmallScreen ? 15 : 17,
-                        fontWeight: FontWeight.w900,
-                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                       ),
@@ -462,17 +515,24 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     );
   }
 
-  Widget _emptyState(bool isSmallScreen) {
+  Widget _emptyState(_Responsive r) {
+    final bottomSafe = MediaQuery.of(context).padding.bottom;
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(
+        r.pagePadding,
+        r.topEmptyPadding,
+        r.pagePadding,
+        r.bottomPadding + bottomSafe + 74,
+      ),
       child: Center(
-        child: Padding(
-          padding: EdgeInsets.all(isSmallScreen ? 24 : 40),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: r.maxContentWidth),
           child: Column(
             children: [
-              SizedBox(height: isSmallScreen ? 40 : 60),
               Container(
-                padding: EdgeInsets.all(isSmallScreen ? 32 : 44),
+                padding: EdgeInsets.all(r.emptyIconPadding),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
@@ -491,32 +551,31 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
                 ),
                 child: Icon(
                   Icons.medical_services_rounded,
-                  size: isSmallScreen ? 70 : 100,
+                  size: r.emptyIconSize,
                   color: const Color(0xFF42A5F5),
                 ),
               ),
-              SizedBox(height: isSmallScreen ? 28 : 40),
+              SizedBox(height: r.emptyGap),
               Text(
                 "¡Vamos a empezar!",
                 style: TextStyle(
-                  fontSize: isSmallScreen ? 24 : 30,
+                  fontSize: r.font(28),
                   fontWeight: FontWeight.w900,
                   color: const Color(0xFF1E3A5F),
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: isSmallScreen ? 12 : 16),
+              SizedBox(height: r.scale(12)),
               Text(
                 "Agrega tu primer medicamento\npara comenzar tu seguimiento",
                 style: TextStyle(
-                  fontSize: isSmallScreen ? 16 : 20,
+                  fontSize: r.font(18),
                   color: const Color(0xFF5B7C99),
                   fontWeight: FontWeight.w600,
-                  height: 1.5,
+                  height: 1.45,
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: isSmallScreen ? 40 : 60),
             ],
           ),
         ),
@@ -528,11 +587,11 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     return FloatingActionButton.extended(
       backgroundColor: const Color(0xFF66BB6A),
       onPressed: _addTreatment,
-      icon: const Icon(Icons.add_rounded, size: 32),
+      icon: const Icon(Icons.add_rounded, size: 30),
       label: const Text(
         "Agregar",
         style: TextStyle(
-          fontSize: 20,
+          fontSize: 19,
           fontWeight: FontWeight.w900,
         ),
       ),
@@ -543,82 +602,102 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   void _showOptions(
       Map<String, dynamic> treatment,
       int index,
-      bool isSmallScreen,
+      _Responsive r,
       ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        padding: EdgeInsets.all(isSmallScreen ? 20 : 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 50,
-              height: 5,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE0E7ED),
-                borderRadius: BorderRadius.circular(3),
+      isScrollControlled: true,
+      builder: (context) {
+        final bottomSafe = MediaQuery.of(context).padding.bottom;
+
+        return SafeArea(
+          top: false,
+          bottom: true,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: EdgeInsets.fromLTRB(
+                r.sheetPadding,
+                r.sheetPadding,
+                r.sheetPadding,
+                r.sheetPadding + bottomSafe,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 50,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0E7ED),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  SizedBox(height: r.sheetGap),
+                  Text(
+                    treatment['name'] ?? 'Medicamento',
+                    style: TextStyle(
+                      fontSize: r.font(25),
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF1E3A5F),
+                      height: 1.15,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: r.scale(6)),
+                  Text(
+                    "${treatment['dosis']} • Próxima toma: ${_getNextDoseTime(treatment)}",
+                    style: TextStyle(
+                      fontSize: r.font(17),
+                      color: const Color(0xFF5B7C99),
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: r.sheetGap),
+                  _optionButton(
+                    icon: Icons.edit_rounded,
+                    label: "Editar",
+                    color: const Color(0xFF42A5F5),
+                    r: r,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _editTreatment(treatment);
+                    },
+                  ),
+                  SizedBox(height: r.scale(10)),
+                  _optionButton(
+                    icon: Icons.delete_rounded,
+                    label: "Eliminar",
+                    color: const Color(0xFFEF5350),
+                    r: r,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _confirmDelete(treatment, index);
+                    },
+                  ),
+                  SizedBox(height: r.scale(10)),
+                  _optionButton(
+                    icon: Icons.close_rounded,
+                    label: "Cancelar",
+                    color: const Color(0xFF90A4AE),
+                    r: r,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: isSmallScreen ? 16 : 24),
-            Text(
-              treatment['name'] ?? 'Medicamento',
-              style: TextStyle(
-                fontSize: isSmallScreen ? 22 : 28,
-                fontWeight: FontWeight.w900,
-                color: const Color(0xFF1E3A5F),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: isSmallScreen ? 6 : 8),
-            Text(
-              "${treatment['dosis']} • Próxima toma: ${_getNextDoseTime(treatment)}",
-              style: TextStyle(
-                fontSize: isSmallScreen ? 16 : 19,
-                color: const Color(0xFF5B7C99),
-                fontWeight: FontWeight.w700,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: isSmallScreen ? 24 : 32),
-            _optionButton(
-              icon: Icons.edit_rounded,
-              label: "Editar",
-              color: const Color(0xFF42A5F5),
-              isSmallScreen: isSmallScreen,
-              onTap: () {
-                Navigator.pop(context);
-                _editTreatment(treatment);
-              },
-            ),
-            SizedBox(height: isSmallScreen ? 10 : 14),
-            _optionButton(
-              icon: Icons.delete_rounded,
-              label: "Eliminar",
-              color: const Color(0xFFEF5350),
-              isSmallScreen: isSmallScreen,
-              onTap: () {
-                Navigator.pop(context);
-                _confirmDelete(treatment, index);
-              },
-            ),
-            SizedBox(height: isSmallScreen ? 10 : 14),
-            _optionButton(
-              icon: Icons.close_rounded,
-              label: "Cancelar",
-              color: const Color(0xFF90A4AE),
-              isSmallScreen: isSmallScreen,
-              onTap: () => Navigator.pop(context),
-            ),
-            SizedBox(height: isSmallScreen ? 8 : 12),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -626,19 +705,19 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
     required IconData icon,
     required String label,
     required Color color,
-    required bool isSmallScreen,
+    required _Responsive r,
     required VoidCallback onTap,
   }) {
     return SizedBox(
       width: double.infinity,
-      height: isSmallScreen ? 50 : 64,
+      height: r.sheetButtonHeight,
       child: ElevatedButton.icon(
         onPressed: onTap,
-        icon: Icon(icon, size: isSmallScreen ? 22 : 28),
+        icon: Icon(icon, size: r.scale(25)),
         label: Text(
           label,
           style: TextStyle(
-            fontSize: isSmallScreen ? 16 : 20,
+            fontSize: r.font(18),
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -680,153 +759,157 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
   }
 
   void _confirmDelete(Map<String, dynamic> treatment, int index) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 400;
+    final width = MediaQuery.of(context).size.width;
+    final isSmallScreen = width < 400;
 
     showDialog(
       context: context,
       builder: (context) => Dialog(
         insetPadding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 20 : 32,
+          horizontal: isSmallScreen ? 18 : 32,
         ),
         backgroundColor: Colors.transparent,
-        child: Container(
-          padding: EdgeInsets.fromLTRB(
-            isSmallScreen ? 20 : 24,
-            isSmallScreen ? 20 : 24,
-            isSmallScreen ? 20 : 24,
-            isSmallScreen ? 18 : 22,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFFFFF),
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.16),
-                blurRadius: 22,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: isSmallScreen ? 64 : 72,
-                height: isSmallScreen ? 64 : 72,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFE4E6),
-                  shape: BoxShape.circle,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Container(
+            padding: EdgeInsets.fromLTRB(
+              isSmallScreen ? 18 : 24,
+              isSmallScreen ? 18 : 24,
+              isSmallScreen ? 18 : 24,
+              isSmallScreen ? 18 : 22,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFFFF),
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.16),
+                  blurRadius: 22,
+                  offset: const Offset(0, 10),
                 ),
-                child: Icon(
-                  Icons.delete_rounded,
-                  color: const Color(0xFFDC2626),
-                  size: isSmallScreen ? 36 : 42,
-                ),
-              ),
-              SizedBox(height: isSmallScreen ? 14 : 16),
-              Text(
-                "Eliminar medicamento",
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 22 : 25,
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF1E3A5F),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: isSmallScreen ? 12 : 14),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmallScreen ? 12 : 16,
-                  vertical: isSmallScreen ? 12 : 14,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: const Color(0xFFE2E8F0),
-                    width: 1.2,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: isSmallScreen ? 60 : 72,
+                  height: isSmallScreen ? 60 : 72,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFFE4E6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.delete_rounded,
+                    color: const Color(0xFFDC2626),
+                    size: isSmallScreen ? 34 : 42,
                   ),
                 ),
-                child: Text(
-                  treatment['name'] ?? 'Medicamento',
+                SizedBox(height: isSmallScreen ? 12 : 16),
+                Text(
+                  "Eliminar medicamento",
                   style: TextStyle(
-                    fontSize: isSmallScreen ? 19 : 22,
+                    fontSize: isSmallScreen ? 21 : 25,
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF1E3A5F),
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              SizedBox(height: isSmallScreen ? 12 : 14),
-              Text(
-                "Esta acción no se puede deshacer.",
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 16 : 18,
-                  color: const Color(0xFF64748B),
-                  fontWeight: FontWeight.w700,
-                  height: 1.3,
+                SizedBox(height: isSmallScreen ? 10 : 14),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 12 : 16,
+                    vertical: isSmallScreen ? 12 : 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: const Color(0xFFE2E8F0),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Text(
+                    treatment['name'] ?? 'Medicamento',
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 18 : 22,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF1E3A5F),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: isSmallScreen ? 20 : 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: isSmallScreen ? 48 : 52,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE2E8F0),
-                          foregroundColor: const Color(0xFF334155),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                SizedBox(height: isSmallScreen ? 10 : 14),
+                Text(
+                  "Esta acción no se puede deshacer.",
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 15.5 : 18,
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: isSmallScreen ? 18 : 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: isSmallScreen ? 48 : 52,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE2E8F0),
+                            foregroundColor: const Color(0xFF334155),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          "Cancelar",
-                          style: TextStyle(
-                            fontSize: isSmallScreen ? 16 : 18,
-                            fontWeight: FontWeight.w900,
+                          child: Text(
+                            "Cancelar",
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 15.5 : 18,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: SizedBox(
-                      height: isSmallScreen ? 48 : 52,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _deleteTreatment(index);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFDC2626),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SizedBox(
+                        height: isSmallScreen ? 48 : 52,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _deleteTreatment(index);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFDC2626),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          "Eliminar",
-                          style: TextStyle(
-                            fontSize: isSmallScreen ? 16 : 18,
-                            fontWeight: FontWeight.w900,
+                          child: Text(
+                            "Eliminar",
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 15.5 : 18,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1013,5 +1096,90 @@ class _TreatmentListScreenState extends State<TreatmentListScreen> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+}
+
+class _Responsive {
+  final double width;
+  final double height;
+
+  const _Responsive({
+    required this.width,
+    required this.height,
+  });
+
+  bool get isTablet => width >= 600;
+  bool get compactWidth => width < 360;
+  bool get compactHeight => height < 680;
+
+  double get maxContentWidth => isTablet ? 560 : double.infinity;
+
+  double get _factor => _clamp(width / 390, 0.82, 1.16);
+
+  double scale(double base) => base * _factor;
+
+  double font(double base) {
+    final eased = 1 + (_factor - 1) * 0.50;
+    return base * _clamp(eased, 0.88, 1.10);
+  }
+
+  double get pagePadding => compactWidth ? 14 : scale(20);
+
+  double get headerPadding => compactHeight ? scale(11) : scale(15);
+
+  double get listTopPadding => compactHeight ? scale(11) : scale(16);
+
+  double get listBottomPadding => compactHeight ? scale(20) : scale(26);
+
+  double get bottomPadding => compactHeight ? scale(20) : scale(26);
+
+  double get topEmptyPadding => compactHeight ? scale(42) : scale(60);
+
+  double get cardPadding => compactHeight ? scale(14) : scale(18);
+
+  double get cardBottomMargin => compactHeight ? scale(13) : scale(17);
+
+  double get cardSectionGap => compactHeight ? scale(16) : scale(21);
+
+  double get smallGap => compactHeight ? scale(10) : scale(13);
+
+  double get buttonGap => compactHeight ? scale(12) : scale(16);
+
+  double get mainIconBox => compactHeight ? scale(50) : scale(60);
+
+  double get mainIconSize => compactHeight ? scale(28) : scale(34);
+
+  double get optionIconPadding => compactHeight ? scale(8) : scale(10);
+
+  double get nextDosePaddingH => compactWidth ? scale(13) : scale(16);
+
+  double get nextDosePaddingV => compactHeight ? scale(12) : scale(15);
+
+  double get clockIconBox => compactHeight ? scale(40) : scale(47);
+
+  double get clockIconSize => compactHeight ? scale(23) : scale(27);
+
+  double get infoPaddingH => compactWidth ? scale(11) : scale(14);
+
+  double get infoPaddingV => compactHeight ? scale(10) : scale(12);
+
+  double get actionButtonHeight => compactHeight ? scale(47) : scale(53);
+
+  double get emptyIconPadding => compactHeight ? scale(30) : scale(42);
+
+  double get emptyIconSize => compactHeight ? scale(68) : scale(96);
+
+  double get emptyGap => compactHeight ? scale(24) : scale(38);
+
+  double get sheetPadding => compactHeight ? scale(18) : scale(24);
+
+  double get sheetGap => compactHeight ? scale(16) : scale(22);
+
+  double get sheetButtonHeight => compactHeight ? scale(50) : scale(60);
+
+  static double _clamp(double value, double min, double max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
   }
 }

@@ -121,21 +121,26 @@ class _AboutScreenState extends State<AboutScreen>
                 ),
               ),
             ),
-            title: const Text(
-              "Sobre MediCare",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: _textBlue,
-                letterSpacing: 0.2,
+            title: const FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                "Sobre MediCare",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: _textBlue,
+                  letterSpacing: 0.2,
+                ),
               ),
             ),
           ),
           body: SafeArea(
             top: false,
+            bottom: true,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final m = _AboutMetrics.of(constraints);
+                final bottomInset = MediaQuery.of(context).padding.bottom;
 
                 return FadeTransition(
                   opacity: _fadeAnimation,
@@ -145,9 +150,9 @@ class _AboutScreenState extends State<AboutScreen>
                       physics: const BouncingScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
                         m.outerPaddingH,
-                        28,
+                        20,
                         m.outerPaddingH,
-                        28,
+                        24 + bottomInset,
                       ),
                       child: Center(
                         child: ConstrainedBox(
@@ -155,10 +160,10 @@ class _AboutScreenState extends State<AboutScreen>
                           child: Column(
                             children: [
                               _header(m),
-                              const SizedBox(height: 30),
+                              SizedBox(height: m.sectionGap),
                               _featuresCard(m),
-                              const SizedBox(height: 34),
-                              _footer(),
+                              SizedBox(height: m.sectionGap),
+                              _footer(m),
                             ],
                           ),
                         ),
@@ -196,8 +201,8 @@ class _AboutScreenState extends State<AboutScreen>
         boxShadow: [
           BoxShadow(
             color: AppTheme.primaryBlue.withOpacity(0.35),
-            blurRadius: 26,
-            offset: const Offset(0, 14),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -246,7 +251,7 @@ class _AboutScreenState extends State<AboutScreen>
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: m.headerSmallGap),
           Container(
             width: 38,
             height: 4,
@@ -255,29 +260,26 @@ class _AboutScreenState extends State<AboutScreen>
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          const SizedBox(height: 14),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              "Tu salud, siempre presente",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: m.headerTitleSize,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                letterSpacing: 0.2,
-                height: 1.25,
-              ),
+          SizedBox(height: m.headerSmallGap),
+          Text(
+            "Tu salud, siempre presente",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: m.headerTitleSize,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 0.2,
+              height: 1.18,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             "MediCare te ayuda a recordar tus medicamentos todos los días, de forma simple y sin complicaciones.",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: m.headerDescSize,
               fontWeight: FontWeight.w600,
-              height: 1.55,
+              height: 1.45,
               color: Colors.white.withOpacity(0.92),
               letterSpacing: 0.1,
             ),
@@ -295,8 +297,8 @@ class _AboutScreenState extends State<AboutScreen>
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -359,15 +361,16 @@ class _AboutScreenState extends State<AboutScreen>
                     fontWeight: FontWeight.w900,
                     color: _textBlue,
                     letterSpacing: 0.1,
+                    height: 1.15,
                   ),
                 ),
-                const SizedBox(height: 7),
+                const SizedBox(height: 6),
                 Text(
                   f.desc,
                   style: TextStyle(
                     fontSize: m.featureDescSize,
                     fontWeight: FontWeight.w500,
-                    height: 1.5,
+                    height: 1.42,
                     color: _muted,
                   ),
                 ),
@@ -379,38 +382,42 @@ class _AboutScreenState extends State<AboutScreen>
     );
   }
 
-  Widget _footer() {
-    return Column(
-      children: [
-        Container(
-          width: 52,
-          height: 1.5,
-          decoration: BoxDecoration(
-            color: _muted.withOpacity(0.25),
-            borderRadius: BorderRadius.circular(2),
+  Widget _footer(_AboutMetrics m) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: m.footerBottomPadding),
+      child: Column(
+        children: [
+          Container(
+            width: 52,
+            height: 1.5,
+            decoration: BoxDecoration(
+              color: _muted.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          "Sosa Tech Lab",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: _textBlue.withOpacity(0.6),
-            letterSpacing: 0.4,
+          const SizedBox(height: 10),
+          Text(
+            "Sosa Tech Lab",
+            style: TextStyle(
+              fontSize: m.footerTitleSize,
+              fontWeight: FontWeight.w700,
+              color: _textBlue.withOpacity(0.6),
+              letterSpacing: 0.4,
+            ),
           ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          "© 2026 · Todos los derechos reservados",
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: _muted.withOpacity(0.75),
-            letterSpacing: 0.2,
+          const SizedBox(height: 3),
+          Text(
+            "© 2026 · Todos los derechos reservados",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: m.footerDescSize,
+              fontWeight: FontWeight.w500,
+              color: _muted.withOpacity(0.75),
+              letterSpacing: 0.2,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -473,6 +480,7 @@ class _BackButtonState extends State<_BackButton> {
 
 class _AboutMetrics {
   final double outerPaddingH;
+  final double sectionGap;
   final double headerPaddingH;
   final double headerPaddingTop;
   final double headerPaddingBottom;
@@ -481,15 +489,20 @@ class _AboutMetrics {
   final double headerIconSize;
   final double headerTitleSize;
   final double headerDescSize;
+  final double headerSmallGap;
   final double featureIconBox;
   final double featureIconSize;
   final double featureTitleSize;
   final double featureDescSize;
   final double featureRowPadding;
   final double featureGap;
+  final double footerTitleSize;
+  final double footerDescSize;
+  final double footerBottomPadding;
 
   const _AboutMetrics._({
     required this.outerPaddingH,
+    required this.sectionGap,
     required this.headerPaddingH,
     required this.headerPaddingTop,
     required this.headerPaddingBottom,
@@ -498,39 +511,59 @@ class _AboutMetrics {
     required this.headerIconSize,
     required this.headerTitleSize,
     required this.headerDescSize,
+    required this.headerSmallGap,
     required this.featureIconBox,
     required this.featureIconSize,
     required this.featureTitleSize,
     required this.featureDescSize,
     required this.featureRowPadding,
     required this.featureGap,
+    required this.footerTitleSize,
+    required this.footerDescSize,
+    required this.footerBottomPadding,
   });
 
   factory _AboutMetrics.of(BoxConstraints constraints) {
     final double width =
     constraints.maxWidth.isFinite ? constraints.maxWidth : 390.0;
+    final double height =
+    constraints.maxHeight.isFinite ? constraints.maxHeight : 760.0;
 
-    final double scale = _clampD(width / 390.0, 0.82, 1.30);
-    final bool isCompactWidth = width < 360;
+    final double scale = _clampD(width / 390.0, 0.78, 1.22);
+    final bool compactWidth = width < 360;
+    final bool compactHeight = height < 690;
 
-    final double headerIconOuter = _clampD(92.0 * scale, 80.0, 108.0);
+    final double headerIconOuter = compactHeight
+        ? _clampD(78.0 * scale, 66.0, 88.0)
+        : _clampD(90.0 * scale, 78.0, 104.0);
 
     return _AboutMetrics._(
-      outerPaddingH: isCompactWidth ? 16.0 : 22.0,
-      headerPaddingH: _clampD(26.0 * scale, 18.0, 30.0),
-      headerPaddingTop: _clampD(34.0 * scale, 26.0, 40.0),
-      headerPaddingBottom: _clampD(30.0 * scale, 22.0, 34.0),
+      outerPaddingH: compactWidth ? 14.0 : 22.0,
+      sectionGap: compactHeight ? 22.0 : 30.0,
+      headerPaddingH: _clampD(24.0 * scale, 16.0, 30.0),
+      headerPaddingTop: compactHeight
+          ? _clampD(24.0 * scale, 18.0, 28.0)
+          : _clampD(32.0 * scale, 24.0, 38.0),
+      headerPaddingBottom: compactHeight
+          ? _clampD(22.0 * scale, 18.0, 28.0)
+          : _clampD(30.0 * scale, 22.0, 34.0),
       headerIconOuter: headerIconOuter,
       headerIconInner: headerIconOuter * 0.67,
       headerIconSize: headerIconOuter * 0.33,
-      headerTitleSize: _clampD(24.0 * scale, 21.0, 27.0),
-      headerDescSize: _clampD(15.5 * scale, 14.0, 17.0),
-      featureIconBox: _clampD(54.0 * scale, 48.0, 60.0),
-      featureIconSize: _clampD(27.0 * scale, 24.0, 30.0),
-      featureTitleSize: _clampD(19.5 * scale, 17.5, 21.5),
-      featureDescSize: _clampD(16.0 * scale, 14.5, 17.5),
-      featureRowPadding: _clampD(20.0 * scale, 15.0, 22.0),
-      featureGap: isCompactWidth ? 12.0 : 16.0,
+      headerTitleSize: _clampD(23.0 * scale, 20.0, 27.0),
+      headerDescSize: _clampD(15.0 * scale, 13.5, 17.0),
+      headerSmallGap: compactHeight ? 11.0 : 15.0,
+      featureIconBox: _clampD(52.0 * scale, 44.0, 60.0),
+      featureIconSize: _clampD(26.0 * scale, 22.0, 30.0),
+      featureTitleSize: _clampD(19.0 * scale, 17.0, 21.0),
+      featureDescSize: _clampD(15.5 * scale, 14.0, 17.0),
+      featureRowPadding: compactHeight
+          ? _clampD(17.0 * scale, 13.0, 19.0)
+          : _clampD(20.0 * scale, 15.0, 22.0),
+      featureGap: compactWidth ? 11.0 : 15.0,
+      footerTitleSize: compactHeight ? 14.5 : 16.0,
+      footerDescSize: compactHeight ? 11.0 : 12.0,
+      footerBottomPadding: compactHeight ? 4.0 : 8.0,
     );
   }
 }

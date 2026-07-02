@@ -38,28 +38,12 @@ class TipsScreen extends StatelessWidget {
   ];
 
   static const List<String> _weekDays = [
-    'Lunes',
-    'Martes',
-    'Miércoles',
-    'Jueves',
-    'Viernes',
-    'Sábado',
-    'Domingo',
+    'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo',
   ];
 
   static const List<String> _months = [
-    'enero',
-    'febrero',
-    'marzo',
-    'abril',
-    'mayo',
-    'junio',
-    'julio',
-    'agosto',
-    'septiembre',
-    'octubre',
-    'noviembre',
-    'diciembre',
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
   ];
 
   int _todayIndex(DateTime now) {
@@ -78,47 +62,62 @@ class TipsScreen extends StatelessWidget {
     final tip = _tips[_todayIndex(now)];
     final dateText = _todayText(now);
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: AppTheme.mainGradient,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final r = _Responsive(constraints.maxWidth);
+    final clampedTextScaler = MediaQuery.textScalerOf(context).clamp(
+      minScaleFactor: 0.9,
+      maxScaleFactor: 1.12,
+    );
 
-              return SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(
-                  r.scale(16),
-                  r.scale(16),
-                  r.scale(16),
-                  r.scale(18),
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: r.maxContentWidth,
-                    ),
-                    child: Column(
-                      children: [
-                        _topHeader(r),
-                        SizedBox(height: r.scale(14)),
-                        _summaryCard(r, dateText),
-                        SizedBox(height: r.scale(14)),
-                        _tipCard(tip, r),
-                        SizedBox(height: r.scale(14)),
-                        _settingsButton(context, r),
-                        SizedBox(height: r.scale(12)),
-                        _footerText(r),
-                      ],
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: clampedTextScaler),
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.mainGradient,
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            top: true,
+            bottom: true,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final r = _Responsive(
+                  width: constraints.maxWidth,
+                  height: constraints.maxHeight,
+                );
+
+                final bottomSafe = MediaQuery.of(context).padding.bottom;
+
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    r.pagePadding,
+                    r.topPadding,
+                    r.pagePadding,
+                    r.bottomPadding + bottomSafe,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: r.maxContentWidth,
+                      ),
+                      child: Column(
+                        children: [
+                          _topHeader(r),
+                          SizedBox(height: r.gap),
+                          _summaryCard(r, dateText),
+                          SizedBox(height: r.gap),
+                          _tipCard(tip, r),
+                          SizedBox(height: r.gap),
+                          _settingsButton(context, r),
+                          SizedBox(height: r.smallGap),
+                          _footerText(r),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -130,11 +129,11 @@ class TipsScreen extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.symmetric(
         horizontal: r.scale(14),
-        vertical: r.scale(14),
+        vertical: r.headerVerticalPadding,
       ),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.72),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: const Color(0xFFD7EAFB),
           width: 1.4,
@@ -142,14 +141,17 @@ class TipsScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            'Consejos de salud',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: r.font(30),
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF1E3A5F),
-              letterSpacing: -0.3,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Consejos de salud',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: r.font(29),
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF1E3A5F),
+                letterSpacing: -0.3,
+              ),
             ),
           ),
           SizedBox(height: r.scale(4)),
@@ -157,7 +159,7 @@ class TipsScreen extends StatelessWidget {
             'Un consejo nuevo cada día',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: r.font(16),
+              fontSize: r.font(15.5),
               fontWeight: FontWeight.w800,
               color: const Color(0xFF64748B),
             ),
@@ -170,27 +172,27 @@ class TipsScreen extends StatelessWidget {
   Widget _summaryCard(_Responsive r, String dateText) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(r.scale(16)),
+      padding: EdgeInsets.all(r.cardPadding),
       decoration: BoxDecoration(
         color: const Color(0xFFF5F9FC),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: const Color(0xFF64B5F6),
-          width: 1.8,
+          width: 1.6,
         ),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF64B5F6).withOpacity(0.12),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            width: r.scale(52),
-            height: r.scale(52),
+            width: r.summaryIconBox,
+            height: r.summaryIconBox,
             decoration: const BoxDecoration(
               color: Color(0xFFE3F2FD),
               shape: BoxShape.circle,
@@ -198,7 +200,7 @@ class TipsScreen extends StatelessWidget {
             child: Icon(
               Icons.favorite_rounded,
               color: const Color(0xFF1976D2),
-              size: r.scale(30),
+              size: r.summaryIconSize,
             ),
           ),
           SizedBox(width: r.scale(12)),
@@ -209,7 +211,7 @@ class TipsScreen extends StatelessWidget {
                 Text(
                   dateText,
                   style: TextStyle(
-                    fontSize: r.font(18),
+                    fontSize: r.font(17.5),
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF1E3A5F),
                   ),
@@ -220,7 +222,7 @@ class TipsScreen extends StatelessWidget {
                 Text(
                   'Cuida tu salud con pequeños pasos.',
                   style: TextStyle(
-                    fontSize: r.font(15),
+                    fontSize: r.font(14.5),
                     height: 1.25,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF64748B),
@@ -241,31 +243,31 @@ class TipsScreen extends StatelessWidget {
         key: ValueKey(tip.title),
         width: double.infinity,
         padding: EdgeInsets.fromLTRB(
-          r.scale(18),
-          r.scale(20),
-          r.scale(18),
-          r.scale(20),
+          r.tipCardHorizontalPadding,
+          r.tipCardVerticalPadding,
+          r.tipCardHorizontalPadding,
+          r.tipCardVerticalPadding,
         ),
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(26),
           border: Border.all(
             color: const Color(0xFFD7EAFB),
-            width: 1.8,
+            width: 1.6,
           ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.06),
-              blurRadius: 20,
-              offset: const Offset(0, 9),
+              blurRadius: 16,
+              offset: const Offset(0, 7),
             ),
           ],
         ),
         child: Column(
           children: [
             Container(
-              width: r.scale(92),
-              height: r.scale(92),
+              width: r.tipIconBox,
+              height: r.tipIconBox,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [
@@ -277,23 +279,21 @@ class TipsScreen extends StatelessWidget {
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF64B5F6).withOpacity(0.18),
-                    blurRadius: 16,
-                    offset: const Offset(0, 7),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
               child: Icon(
                 tip.icon,
-                size: r.scale(52),
+                size: r.tipIconSize,
                 color: const Color(0xFF1976D2),
               ),
             ),
-
-            SizedBox(height: r.scale(16)),
-
+            SizedBox(height: r.scale(14)),
             Container(
               padding: EdgeInsets.symmetric(
-                horizontal: r.scale(13),
+                horizontal: r.scale(12),
                 vertical: r.scale(7),
               ),
               decoration: BoxDecoration(
@@ -301,40 +301,37 @@ class TipsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: const Color(0xFFFFB74D),
-                  width: 1.4,
+                  width: 1.3,
                 ),
               ),
               child: Text(
                 'Consejo del día',
                 style: TextStyle(
-                  fontSize: r.font(14),
+                  fontSize: r.font(13.5),
                   fontWeight: FontWeight.w900,
                   color: const Color(0xFFB45309),
                 ),
               ),
             ),
-
-            SizedBox(height: r.scale(14)),
-
+            SizedBox(height: r.scale(12)),
             Text(
               tip.title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: r.font(28),
+                fontSize: r.font(26),
                 fontWeight: FontWeight.w900,
                 color: const Color(0xFF1E3A5F),
                 letterSpacing: -0.3,
+                height: 1.12,
               ),
             ),
-
-            SizedBox(height: r.scale(12)),
-
+            SizedBox(height: r.scale(10)),
             Text(
               tip.message,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: r.font(19),
-                height: 1.35,
+                fontSize: r.font(18),
+                height: 1.32,
                 fontWeight: FontWeight.w700,
                 color: const Color(0xFF334155),
               ),
@@ -348,7 +345,7 @@ class TipsScreen extends StatelessWidget {
   Widget _settingsButton(BuildContext context, _Responsive r) {
     return SizedBox(
       width: double.infinity,
-      height: r.scale(52),
+      height: r.buttonHeight,
       child: ElevatedButton.icon(
         onPressed: () {
           Navigator.pushNamed(context, '/settings');
@@ -360,7 +357,7 @@ class TipsScreen extends StatelessWidget {
         label: Text(
           'Configuración',
           style: TextStyle(
-            fontSize: r.font(18),
+            fontSize: r.font(17.5),
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -373,7 +370,7 @@ class TipsScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
             side: const BorderSide(
               color: Color(0xFFD7EAFB),
-              width: 1.8,
+              width: 1.6,
             ),
           ),
         ),
@@ -385,19 +382,19 @@ class TipsScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(
-        horizontal: r.scale(16),
-        vertical: r.scale(12),
+        horizontal: r.scale(14),
+        vertical: r.scale(11),
       ),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.58),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Text(
         'Recuerda seguir siempre las indicaciones de tu médico.',
         textAlign: TextAlign.center,
         style: TextStyle(
-          fontSize: r.font(14),
-          height: 1.3,
+          fontSize: r.font(13.5),
+          height: 1.28,
           fontWeight: FontWeight.w800,
           color: const Color(0xFF64748B),
         ),
@@ -408,21 +405,55 @@ class TipsScreen extends StatelessWidget {
 
 class _Responsive {
   final double width;
+  final double height;
 
-  const _Responsive(this.width);
+  const _Responsive({
+    required this.width,
+    required this.height,
+  });
 
   bool get isTablet => width >= 600;
+  bool get compactWidth => width < 360;
+  bool get compactHeight => height < 680;
 
   double get maxContentWidth => isTablet ? 520 : double.infinity;
 
-  double get _factor => _clamp(width / 390, 0.86, 1.16);
+  double get _factor => _clamp(width / 390, 0.82, 1.14);
 
   double scale(double base) => base * _factor;
 
   double font(double base) {
-    final eased = 1 + (_factor - 1) * 0.55;
-    return base * _clamp(eased, 0.9, 1.12);
+    final eased = 1 + (_factor - 1) * 0.50;
+    return base * _clamp(eased, 0.88, 1.10);
   }
+
+  double get pagePadding => compactWidth ? 14 : scale(16);
+
+  double get topPadding => compactHeight ? 10 : scale(16);
+
+  double get bottomPadding => compactHeight ? 18 : scale(24);
+
+  double get gap => compactHeight ? scale(11) : scale(14);
+
+  double get smallGap => compactHeight ? scale(8) : scale(12);
+
+  double get headerVerticalPadding => compactHeight ? scale(11) : scale(14);
+
+  double get cardPadding => compactHeight ? scale(13) : scale(16);
+
+  double get summaryIconBox => compactHeight ? scale(46) : scale(52);
+
+  double get summaryIconSize => compactHeight ? scale(26) : scale(30);
+
+  double get tipCardHorizontalPadding => compactWidth ? scale(14) : scale(18);
+
+  double get tipCardVerticalPadding => compactHeight ? scale(16) : scale(20);
+
+  double get tipIconBox => compactHeight ? scale(76) : scale(92);
+
+  double get tipIconSize => compactHeight ? scale(42) : scale(52);
+
+  double get buttonHeight => compactHeight ? scale(50) : scale(54);
 
   static double _clamp(double value, double min, double max) {
     if (value < min) return min;

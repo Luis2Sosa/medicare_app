@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   NotificationService._();
+
   static final NotificationService instance = NotificationService._();
 
   final FlutterLocalNotificationsPlugin _plugin =
@@ -24,8 +26,9 @@ class NotificationService {
     final location = tz.getLocation('America/Santo_Domingo');
     tz.setLocalLocation(location);
 
-    const androidSettings =
-    AndroidInitializationSettings('@drawable/ic_notification');
+    const androidSettings = AndroidInitializationSettings(
+      '@drawable/ic_notification',
+    );
 
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -56,6 +59,8 @@ class NotificationService {
     await androidImpl?.createNotificationChannel(channel);
 
     _initialized = true;
+
+    debugPrint('NOTIFICACIONES INICIALIZADAS CORRECTAMENTE');
   }
 
   Future<void> requestPermissions() async {
@@ -63,8 +68,14 @@ class NotificationService {
     _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
 
+    final bool? notificationPermission =
     await androidImpl?.requestNotificationsPermission();
+
+    final bool? exactAlarmPermission =
     await androidImpl?.requestExactAlarmsPermission();
+
+    debugPrint('PERMISO NOTIFICACIONES: $notificationPermission');
+    debugPrint('PERMISO ALARMAS EXACTAS: $exactAlarmPermission');
   }
 
   Future<void> scheduleRemindersForTreatment({
@@ -81,11 +92,11 @@ class NotificationService {
       hora: horaInicio,
       medicationName: medicationName,
       dosis: dosis,
-
-
     );
 
-    print("ALARMA DEL TRATAMIENTO $treatmentId PROGRAMADA PARA $horaInicio");
+    debugPrint(
+      'ALARMA DEL TRATAMIENTO $treatmentId PROGRAMADA PARA $horaInicio',
+    );
   }
 
   Future<void> acknowledgeDose({
@@ -104,15 +115,17 @@ class NotificationService {
       dosis: dosis,
     );
 
-    print("DOSIS RECONOCIDA. PRÓXIMA ALARMA: $horaInicio");
+    debugPrint('DOSIS RECONOCIDA. PRÓXIMA ALARMA: $horaInicio');
   }
 
   Future<void> cancelRemindersForTreatment(int treatmentId) async {
     await _plugin.cancel(treatmentId);
+    debugPrint('ALARMA CANCELADA PARA TRATAMIENTO $treatmentId');
   }
 
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
+    debugPrint('TODAS LAS ALARMAS FUERON CANCELADAS');
   }
 
   Future<void> _scheduleSingleReminder({
@@ -128,36 +141,74 @@ class NotificationService {
     final tz.TZDateTime scheduledDate =
     _nextOccurrenceFromHourMinute(hour, minute);
 
-    print("ALARMA PROGRAMÁNDOSE PARA: $scheduledDate");
+    debugPrint('HORA RECIBIDA: $hora');
+    debugPrint('HORA CONVERTIDA: $hour:$minute');
+    debugPrint('ALARMA PROGRAMÁNDOSE PARA: $scheduledDate');
 
-    await _plugin.zonedSchedule(
-      treatmentId,
-      'Hora de tu medicamento 💊',
-      '$medicationName — $dosis',
-      scheduledDate,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription: _channelDescription,
-          icon: 'ic_notification',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
-          enableVibration: true,
-          category: AndroidNotificationCategory.alarm,
-          visibility: NotificationVisibility.public,
+    try {
+      await _plugin.zonedSchedule(
+        treatmentId,
+        'Hora de tu medicamento 💊',
+        '$medicationName — $dosis',
+        scheduledDate,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelId,
+            _channelName,
+            channelDescription: _channelDescription,
+            icon: 'ic_notification',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: true,
+            enableVibration: true,
+            category: AndroidNotificationCategory.alarm,
+            visibility: NotificationVisibility.public,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentSound: true,
+            presentAlert: true,
+            interruptionLevel: InterruptionLevel.timeSensitive,
+          ),
         ),
-        iOS: DarwinNotificationDetails(
-          presentSound: true,
-          presentAlert: true,
-          interruptionLevel: InterruptionLevel.timeSensitive,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
+      );
+
+      debugPrint('ALARMA PROGRAMADA CORRECTAMENTE');
+    } catch (e) {
+      debugPrint('ERROR PROGRAMANDO ALARMA EXACTA: $e');
+
+      await _plugin.zonedSchedule(
+        treatmentId,
+        'Hora de tu medicamento 💊',
+        '$medicationName — $dosis',
+        scheduledDate,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelId,
+            _channelName,
+            channelDescription: _channelDescription,
+            icon: 'ic_notification',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: true,
+            enableVibration: true,
+            category: AndroidNotificationCategory.reminder,
+            visibility: NotificationVisibility.public,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentSound: true,
+            presentAlert: true,
+          ),
         ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
-    );
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
+      );
+
+      debugPrint('ALARMA PROGRAMADA EN MODO INEXACTO COMO RESPALDO');
+    }
   }
 
   int _parseHoraATotalMinutos(String horaTexto) {
@@ -186,7 +237,7 @@ class NotificationService {
       minute,
     );
 
-    if (scheduled.isBefore(now)) {
+    if (!scheduled.isAfter(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }
 
