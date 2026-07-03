@@ -11,10 +11,10 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin =
   FlutterLocalNotificationsPlugin();
 
-  static const String _channelId = 'medicare_alarm_channel_v2';
+  static const String _channelId = 'medicare_reminder_channel_v1';
   static const String _channelName = 'Recordatorios de medicamentos';
   static const String _channelDescription =
-      'Alarmas para recordarte tomar tus medicamentos a tiempo';
+      'Notificaciones para recordarte tomar tus medicamentos';
 
   bool _initialized = false;
 
@@ -71,11 +71,7 @@ class NotificationService {
     final bool? notificationPermission =
     await androidImpl?.requestNotificationsPermission();
 
-    final bool? exactAlarmPermission =
-    await androidImpl?.requestExactAlarmsPermission();
-
     debugPrint('PERMISO NOTIFICACIONES: $notificationPermission');
-    debugPrint('PERMISO ALARMAS EXACTAS: $exactAlarmPermission');
   }
 
   Future<void> scheduleRemindersForTreatment({
@@ -95,7 +91,7 @@ class NotificationService {
     );
 
     debugPrint(
-      'ALARMA DEL TRATAMIENTO $treatmentId PROGRAMADA PARA $horaInicio',
+      'NOTIFICACIÓN DEL TRATAMIENTO $treatmentId PROGRAMADA PARA $horaInicio',
     );
   }
 
@@ -115,17 +111,17 @@ class NotificationService {
       dosis: dosis,
     );
 
-    debugPrint('DOSIS RECONOCIDA. PRÓXIMA ALARMA: $horaInicio');
+    debugPrint('DOSIS RECONOCIDA. PRÓXIMA NOTIFICACIÓN: $horaInicio');
   }
 
   Future<void> cancelRemindersForTreatment(int treatmentId) async {
     await _plugin.cancel(treatmentId);
-    debugPrint('ALARMA CANCELADA PARA TRATAMIENTO $treatmentId');
+    debugPrint('NOTIFICACIÓN CANCELADA PARA TRATAMIENTO $treatmentId');
   }
 
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
-    debugPrint('TODAS LAS ALARMAS FUERON CANCELADAS');
+    debugPrint('TODAS LAS NOTIFICACIONES FUERON CANCELADAS');
   }
 
   Future<void> _scheduleSingleReminder({
@@ -143,72 +139,37 @@ class NotificationService {
 
     debugPrint('HORA RECIBIDA: $hora');
     debugPrint('HORA CONVERTIDA: $hour:$minute');
-    debugPrint('ALARMA PROGRAMÁNDOSE PARA: $scheduledDate');
+    debugPrint('NOTIFICACIÓN PROGRAMÁNDOSE PARA: $scheduledDate');
 
-    try {
-      await _plugin.zonedSchedule(
-        treatmentId,
-        'Hora de tu medicamento 💊',
-        '$medicationName — $dosis',
-        scheduledDate,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            _channelId,
-            _channelName,
-            channelDescription: _channelDescription,
-            icon: 'ic_notification',
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: true,
-            enableVibration: true,
-            category: AndroidNotificationCategory.alarm,
-            visibility: NotificationVisibility.public,
-          ),
-          iOS: DarwinNotificationDetails(
-            presentSound: true,
-            presentAlert: true,
-            interruptionLevel: InterruptionLevel.timeSensitive,
-          ),
+    await _plugin.zonedSchedule(
+      treatmentId,
+      'Hora de tu medicamento 💊',
+      '$medicationName — $dosis',
+      scheduledDate,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channelId,
+          _channelName,
+          channelDescription: _channelDescription,
+          icon: 'ic_notification',
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          enableVibration: true,
+          category: AndroidNotificationCategory.reminder,
+          visibility: NotificationVisibility.public,
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
-      );
-
-      debugPrint('ALARMA PROGRAMADA CORRECTAMENTE');
-    } catch (e) {
-      debugPrint('ERROR PROGRAMANDO ALARMA EXACTA: $e');
-
-      await _plugin.zonedSchedule(
-        treatmentId,
-        'Hora de tu medicamento 💊',
-        '$medicationName — $dosis',
-        scheduledDate,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            _channelId,
-            _channelName,
-            channelDescription: _channelDescription,
-            icon: 'ic_notification',
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: true,
-            enableVibration: true,
-            category: AndroidNotificationCategory.reminder,
-            visibility: NotificationVisibility.public,
-          ),
-          iOS: DarwinNotificationDetails(
-            presentSound: true,
-            presentAlert: true,
-          ),
+        iOS: DarwinNotificationDetails(
+          presentSound: true,
+          presentAlert: true,
         ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
-      );
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+      UILocalNotificationDateInterpretation.absoluteTime,
+    );
 
-      debugPrint('ALARMA PROGRAMADA EN MODO INEXACTO COMO RESPALDO');
-    }
+    debugPrint('NOTIFICACIÓN PROGRAMADA CORRECTAMENTE');
   }
 
   int _parseHoraATotalMinutos(String horaTexto) {
