@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:medicare_app/core/app_theme.dart';
 import 'package:medicare_app/core/database/app_database.dart';
 import 'package:medicare_app/services/notification_service.dart';
@@ -372,6 +373,9 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
     return '$hour:$minute $period';
   }
 
+  // Selector de hora simple: solo botones grandes +/- para hora y
+  // minutos, AM/PM, y un botón claro para confirmar. Nada de pasos
+  // extra ni opciones adicionales que puedan confundir.
   Future<void> _pickTime() async {
     int hour = selectedTime?.hourOfPeriod ?? TimeOfDay.now().hourOfPeriod;
     if (hour == 0) hour = 12;
@@ -409,10 +413,10 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                     physics: const BouncingScrollPhysics(),
                     child: Container(
                       padding: EdgeInsets.fromLTRB(
-                        18,
+                        20,
                         compactHeight ? 14 : 18,
-                        18,
-                        compactHeight ? 18 : 24,
+                        20,
+                        compactHeight ? 20 : 26,
                       ),
                       decoration: const BoxDecoration(
                         color: Color(0xFFF8FAFC),
@@ -435,12 +439,13 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                           Text(
                             "Seleccionar hora",
                             style: TextStyle(
-                              fontSize: compactHeight ? 22 : 24,
+                              fontSize: compactHeight ? 24 : 27,
                               fontWeight: FontWeight.w900,
                               color: const Color(0xFF1E3A5F),
                             ),
                           ),
-                          SizedBox(height: compactHeight ? 16 : 22),
+
+                          SizedBox(height: compactHeight ? 20 : 26),
 
                           Row(
                             children: [
@@ -450,29 +455,33 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                   value: hour.toString().padLeft(2, '0'),
                                   compact: compactHeight,
                                   onAdd: () {
+                                    HapticFeedback.selectionClick();
                                     setModalState(() {
                                       hour = hour == 12 ? 1 : hour + 1;
                                     });
                                   },
                                   onRemove: () {
+                                    HapticFeedback.selectionClick();
                                     setModalState(() {
                                       hour = hour == 1 ? 12 : hour - 1;
                                     });
                                   },
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: _timeColumn(
                                   title: "Minutos",
                                   value: minute.toString().padLeft(2, '0'),
                                   compact: compactHeight,
                                   onAdd: () {
+                                    HapticFeedback.selectionClick();
                                     setModalState(() {
                                       minute = (minute + 5) % 60;
                                     });
                                   },
                                   onRemove: () {
+                                    HapticFeedback.selectionClick();
                                     setModalState(() {
                                       minute =
                                       (minute - 5) < 0 ? 55 : minute - 5;
@@ -483,7 +492,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                             ],
                           ),
 
-                          SizedBox(height: compactHeight ? 14 : 18),
+                          SizedBox(height: compactHeight ? 16 : 20),
 
                           Row(
                             children: [
@@ -493,17 +502,19 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                                   selected: period == "AM",
                                   compact: compactHeight,
                                   onTap: () {
+                                    HapticFeedback.selectionClick();
                                     setModalState(() => period = "AM");
                                   },
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: _periodButton(
                                   text: "PM",
                                   selected: period == "PM",
                                   compact: compactHeight,
                                   onTap: () {
+                                    HapticFeedback.selectionClick();
                                     setModalState(() => period = "PM");
                                   },
                                 ),
@@ -511,25 +522,26 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                             ],
                           ),
 
-                          SizedBox(height: compactHeight ? 18 : 24),
+                          SizedBox(height: compactHeight ? 20 : 26),
 
                           SizedBox(
                             width: double.infinity,
-                            height: compactHeight ? 54 : 58,
+                            height: compactHeight ? 60 : 66,
                             child: ElevatedButton.icon(
                               onPressed: () {
+                                HapticFeedback.mediumImpact();
                                 Navigator.pop(context, buildTime());
                               },
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.check_circle_rounded,
-                                size: 26,
+                                size: compactHeight ? 28 : 30,
                               ),
-                              label: const FittedBox(
+                              label: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
                                   "Usar esta hora",
                                   style: TextStyle(
-                                    fontSize: 20,
+                                    fontSize: compactHeight ? 21 : 23,
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
@@ -537,8 +549,29 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF10B981),
                                 foregroundColor: Colors.white,
+                                elevation: 6,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: compactHeight ? 10 : 14),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: compactHeight ? 50 : 54,
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFF64748B),
+                              ),
+                              child: Text(
+                                "Cancelar",
+                                style: TextStyle(
+                                  fontSize: compactHeight ? 17 : 18,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
@@ -560,6 +593,8 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
     }
   }
 
+  // Columna de hora/minuto con botones circulares grandes, simples,
+  // un toque = un cambio. Fácil de entender de un vistazo.
   Widget _timeColumn({
     required String title,
     required String value,
@@ -567,14 +602,16 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
     required VoidCallback onRemove,
     required bool compact,
   }) {
+    final double buttonSize = compact ? 60 : 68;
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 10 : 14,
-        vertical: compact ? 12 : 16,
+        vertical: compact ? 14 : 18,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: const Color(0xFFD7EAFB),
           width: 2,
@@ -585,31 +622,31 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
           Text(
             title,
             style: TextStyle(
-              fontSize: compact ? 15 : 17,
+              fontSize: compact ? 16 : 18,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF64748B),
             ),
           ),
-          SizedBox(height: compact ? 4 : 8),
-          IconButton(
-            onPressed: onAdd,
-            icon: const Icon(Icons.keyboard_arrow_up_rounded),
-            iconSize: compact ? 34 : 40,
-            color: const Color(0xFF1976D2),
+          SizedBox(height: compact ? 8 : 10),
+          _StepperButton(
+            icon: Icons.keyboard_arrow_up_rounded,
+            size: buttonSize,
+            onTap: onAdd,
           ),
+          SizedBox(height: compact ? 4 : 6),
           Text(
             value,
             style: TextStyle(
-              fontSize: compact ? 34 : 40,
+              fontSize: compact ? 40 : 46,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF1E3A5F),
             ),
           ),
-          IconButton(
-            onPressed: onRemove,
-            icon: const Icon(Icons.keyboard_arrow_down_rounded),
-            iconSize: compact ? 34 : 40,
-            color: const Color(0xFF1976D2),
+          SizedBox(height: compact ? 4 : 6),
+          _StepperButton(
+            icon: Icons.keyboard_arrow_down_rounded,
+            size: buttonSize,
+            onTap: onRemove,
           ),
         ],
       ),
@@ -623,7 +660,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
     required bool compact,
   }) {
     return SizedBox(
-      height: compact ? 52 : 58,
+      height: compact ? 58 : 64,
       child: ElevatedButton(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
@@ -643,7 +680,7 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
         child: Text(
           text,
           style: TextStyle(
-            fontSize: compact ? 19 : 21,
+            fontSize: compact ? 21 : 23,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -889,6 +926,45 @@ class _TreatmentFormScreenState extends State<TreatmentFormScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// Botón +/- circular grande y simple: un toque, un cambio.
+// Tamaño táctil amplio (60-68dp) para que sea fácil de presionar.
+class _StepperButton extends StatelessWidget {
+  final IconData icon;
+  final double size;
+  final VoidCallback onTap;
+
+  const _StepperButton({
+    required this.icon,
+    required this.size,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF3FC),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: const Color(0xFF1976D2).withOpacity(0.35),
+            width: 1.5,
+          ),
+        ),
+        child: Icon(
+          icon,
+          size: size * 0.62,
+          color: const Color(0xFF1976D2),
         ),
       ),
     );

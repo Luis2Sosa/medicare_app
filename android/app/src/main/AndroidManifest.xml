@@ -5,6 +5,14 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- AGREGADO: necesario en Android 12+ (API 31+) para que
+         AndroidScheduleMode.exactAllowWhileIdle funcione en release.
+         Sin este permiso, las notificaciones programadas exactas
+         se degradan a inexactas o no se disparan en dispositivos
+         reales instalados desde Google Play. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
     <application
         android:label="MediCare"
         android:name="${applicationName}"

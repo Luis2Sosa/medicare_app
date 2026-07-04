@@ -112,13 +112,14 @@ class _StartScreenState extends State<StartScreen>
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 460),
                           child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               FadeTransition(
                                 opacity: logoFade,
                                 child: _logoHeader(m),
                               ),
 
-                              SizedBox(height: 20),
+                              SizedBox(height: m.mainGap),
 
                               FadeTransition(
                                 opacity: contentFade,
@@ -158,28 +159,12 @@ class _StartScreenState extends State<StartScreen>
     );
   }
 
+  // Se quitó el logo/cruz superior. Ahora el encabezado va directo con
+  // el nombre de la app, el detalle de latido y el subtítulo, con un
+  // poco más de espacio arriba para que no se vea vacío ni apretado.
   Widget _logoHeader(_ScreenMetrics m) {
     return Column(
       children: [
-        Semantics(
-          label: "Logotipo de MediCare",
-          child: Image.asset(
-            "assets/images/medicare_logo.png",
-            width: m.logoSize,
-            height: m.logoSize,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(
-                Icons.medication_rounded,
-                size: m.logoSize * 0.70,
-                color: AppTheme.primaryBlue,
-              );
-            },
-          ),
-        ),
-
-        const SizedBox(height: 0),
-
         Text(
           "MediCare",
           textAlign: TextAlign.center,
@@ -192,16 +177,16 @@ class _StartScreenState extends State<StartScreen>
           ),
         ),
 
-        const SizedBox(height: 2),
+        const SizedBox(height: 6),
 
         SizedBox(
-          width: 180,
-          height: 30,
+          width: 200,
+          height: 32,
           child: Stack(
             alignment: Alignment.center,
             children: [
               CustomPaint(
-                size: const Size(180, 30),
+                size: const Size(200, 32),
                 painter: _HeartbeatPainter(),
               ),
               Container(
@@ -210,14 +195,14 @@ class _StartScreenState extends State<StartScreen>
                 child: const Icon(
                   Icons.favorite_rounded,
                   color: Colors.red,
-                  size: 22,
+                  size: 24,
                 ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 2),
+        const SizedBox(height: 6),
 
         Text(
           "Pensada para personas mayores",
@@ -734,11 +719,14 @@ class _ScreenMetrics {
         88,
         165,
       ),
-      logoTitleSize: _clampD(36 * scale, 27, 43),
+      logoTitleSize: _clampD(40 * scale, 30, 48),
       logoSubtitleGap: isCompactHeight ? 8 : 12,
-      headerTextSize: _clampD(15.5 * scale, 13, 18),
+      headerTextSize: _clampD(16 * scale, 13.5, 18.5),
 
-      mainGap: isExtraCompactHeight ? 20 : (isCompactHeight ? 28 : 42),
+      // Como ya no hay logo/imagen arriba, este espacio (entre el
+      // encabezado de texto y la tarjeta) puede ser un poco mayor para
+      // que la pantalla se sienta balanceada en vez de vacía arriba.
+      mainGap: isExtraCompactHeight ? 26 : (isCompactHeight ? 34 : 48),
 
       appNameSize: _clampD(33 * scale, 26, 39),
       sloganSmallSize: _clampD(27 * scale, 20, 31),

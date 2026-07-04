@@ -63,15 +63,27 @@ class NotificationService {
     debugPrint('NOTIFICACIONES INICIALIZADAS CORRECTAMENTE');
   }
 
+  /// IMPORTANTE: llamar esto DESPUÉS de init() y ANTES de programar
+  /// cualquier recordatorio. Sin esto, en release las notificaciones
+  /// programadas exactas simplemente no se disparan (Android 12+).
   Future<void> requestPermissions() async {
     final androidImpl =
     _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
 
+    // 1. Permiso de notificaciones (Android 13+)
     final bool? notificationPermission =
     await androidImpl?.requestNotificationsPermission();
-
     debugPrint('PERMISO NOTIFICACIONES: $notificationPermission');
+
+    // 2. Permiso de alarmas exactas (Android 12+ / API 31+)
+    // Sin este permiso, AndroidScheduleMode.exactAllowWhileIdle
+    // falla silenciosamente en release aunque funcione en debug,
+    // porque ADB/Android Studio a veces lo concede automáticamente
+    // al instalar en modo debug, pero Google Play NO lo hace.
+    final bool? exactAlarmPermission =
+    await androidImpl?.requestExactAlarmsPermission();
+    debugPrint('PERMISO ALARMAS EXACTAS: $exactAlarmPermission');
   }
 
   Future<void> scheduleRemindersForTreatment({
@@ -164,7 +176,13 @@ class NotificationService {
           presentAlert: true,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      // Cambiado de "inexactAllowWhileIdle" a "exactAllowWhileIdle":
+      // un recordatorio de medicamento necesita precisión. El modo
+      // "inexact" puede retrasar la notificación varios minutos u
+      // horas en Doze, sobre todo en Xiaomi/Samsung/Huawei, y da la
+      // sensación de que "no llega". Requiere el permiso de alarmas
+      // exactas solicitado en requestPermissions().
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
       UILocalNotificationDateInterpretation.absoluteTime,
     );
