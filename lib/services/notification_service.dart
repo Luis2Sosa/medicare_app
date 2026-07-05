@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -27,7 +28,7 @@ class NotificationService {
     tz.setLocalLocation(location);
 
     const androidSettings = AndroidInitializationSettings(
-      '@drawable/ic_notification',
+      'ic_notification',
     );
 
     const iosSettings = DarwinInitializationSettings(
@@ -63,28 +64,117 @@ class NotificationService {
     debugPrint('NOTIFICACIONES INICIALIZADAS CORRECTAMENTE');
   }
 
-  /// IMPORTANTE: llamar esto DESPUÉS de init() y ANTES de programar
-  /// cualquier recordatorio. Sin esto, en release las notificaciones
-  /// programadas exactas simplemente no se disparan (Android 12+).
-  Future<void> requestPermissions() async {
+  /// ---------------------------------------------------------------------
+  /// FLUJO COMPLETO DE PERMISOS PARA EL USUARIO
+  /// ---------------------------------------------------------------------
+  /// Pide SOLO el permiso normal de notificaciones (el diálogo estándar
+  /// de Android). No necesita BuildContext, así que es seguro llamarlo
+  /// desde main() antes de runApp(), donde todavía no existe ningún
+  /// widget en pantalla.
+  ///
+  /// Esto reemplaza al viejo requestPermissions() para el caso de
+  /// main.dart. NO pide el permiso puntual (SCHEDULE_EXACT_ALARM) aquí,
+  /// porque ese sí necesita mostrar un diálogo explicativo con context,
+  /// y en main() todavía no hay ninguna pantalla construida.
+  Future<void> requestNotificationsPermission() async {
     final androidImpl =
     _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
 
-    // 1. Permiso de notificaciones (Android 13+)
     final bool? notificationPermission =
     await androidImpl?.requestNotificationsPermission();
     debugPrint('PERMISO NOTIFICACIONES: $notificationPermission');
-
-    // 2. Permiso de alarmas exactas (Android 12+ / API 31+)
-    // Sin este permiso, AndroidScheduleMode.exactAllowWhileIdle
-    // falla silenciosamente en release aunque funcione en debug,
-    // porque ADB/Android Studio a veces lo concede automáticamente
-    // al instalar en modo debug, pero Google Play NO lo hace.
-    final bool? exactAlarmPermission =
-    await androidImpl?.requestExactAlarmsPermission();
-    debugPrint('PERMISO ALARMAS EXACTAS: $exactAlarmPermission');
   }
+
+  /// Pide el permiso puntual (SCHEDULE_EXACT_ALARM) con un diálogo
+  /// explicativo previo. SÍ necesita BuildContext, así que solo se debe
+  /// llamar desde un widget ya construido — por ejemplo el botón
+  /// "Comenzar ahora" de tu pantalla de bienvenida.
+  ///
+  /// Al usuario solo le hablamos de "notificaciones puntuales" — nunca
+  /// de "alarmas", aunque por debajo Android sí llame así al permiso.
+  Future<void> requestExactAlarmPermission(BuildContext context) async {
+    final androidImpl =
+    _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+
+    // Si el usuario ya tiene el permiso puntual concedido, no lo
+    // molestamos con la pantalla de Ajustes.
+    final bool yaTienePermisoPuntual =
+        await androidImpl?.canScheduleExactNotifications() ?? false;
+
+    if (yaTienePermisoPuntual) {
+      debugPrint('PERMISO PUNTUAL: YA CONCEDIDO, NO SE PIDE DE NUEVO');
+      return;
+    }
+
+    // Explicamos ANTES de mandarlo a Ajustes, en lenguaje simple.
+    if (!context.mounted) return;
+    final bool? quiereActivarlo = await _mostrarExplicacionPermisoPuntual(
+      context,
+    );
+
+    if (quiereActivarlo != true) {
+      debugPrint('USUARIO DECLINÓ ACTIVAR NOTIFICACIONES PUNTUALES');
+      return;
+    }
+
+    // Esto abre la pantalla de Ajustes de Android. El usuario debe
+    // activar el switch manualmente; no hay diálogo emergente posible
+    // aquí, es una limitación del sistema operativo, no de tu app.
+    final bool? resultadoSolicitud =
+    await androidImpl?.requestExactAlarmsPermission();
+    debugPrint('RESULTADO SOLICITUD PERMISO PUNTUAL: $resultadoSolicitud');
+
+    // Verificamos el estado real después de que el usuario regresó.
+    final bool quedoConcedido =
+        await androidImpl?.canScheduleExactNotifications() ?? false;
+    debugPrint('¿PERMISO PUNTUAL QUEDÓ CONCEDIDO?: $quedoConcedido');
+  }
+
+  Future<bool?> _mostrarExplicacionPermisoPuntual(
+      BuildContext context,
+      ) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Notificaciones puntuales'),
+          content: const Text(
+            'Para que tus recordatorios de medicamento lleguen '
+                'exactamente a la hora indicada, Android necesita un '
+                'permiso adicional.\n\n'
+                'Te vamos a llevar a una pantalla de Ajustes: solo activa '
+                'el interruptor que dice "Permitir" y regresa a la app.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Ahora no'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Continuar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Llama esto en cualquier pantalla (ej. Ajustes de la app) para saber
+  /// si debes mostrar un aviso de "tus recordatorios pueden llegar tarde".
+  Future<bool> tienePermisoNotificacionPuntual() async {
+    final androidImpl =
+    _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    return await androidImpl?.canScheduleExactNotifications() ?? false;
+  }
+
+  /// ---------------------------------------------------------------------
+  /// PROGRAMACIÓN DE RECORDATORIOS
+  /// ---------------------------------------------------------------------
 
   Future<void> scheduleRemindersForTreatment({
     required int treatmentId,
@@ -153,6 +243,34 @@ class NotificationService {
     debugPrint('HORA CONVERTIDA: $hour:$minute');
     debugPrint('NOTIFICACIÓN PROGRAMÁNDOSE PARA: $scheduledDate');
 
+    // ESTA ES LA LÍNEA QUE FALTABA EN EL ARCHIVO ORIGINAL. Sin esta
+    // verificación, el código asumía "exactAllowWhileIdle" siempre,
+    // incluso cuando el usuario instaló desde Google Play y el permiso
+    // SCHEDULE_EXACT_ALARM viene denegado por defecto en Android 13+
+    // (comportamiento documentado de Android, no un bug de tu app).
+    // Resultado: zonedSchedule() se ejecutaba sin lanzar error, pero
+    // Android descartaba la notificación en segundo plano porque no
+    // tenía autorización real para el modo exacto.
+    final androidImpl =
+    _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+
+    // CLAVE: verificamos el permiso ANTES de decidir el modo.
+    // Si el usuario nunca activó el permiso puntual, usamos el modo
+    // inexacto: la notificación SIEMPRE llega, aunque pueda demorar
+    // algunos minutos en dispositivos en reposo profundo. Esto evita
+    // el caso que reportaste: "no llega, nunca, en silencio total".
+    final bool puedeProgramarPuntual =
+        await androidImpl?.canScheduleExactNotifications() ?? false;
+
+    final AndroidScheduleMode modo = puedeProgramarPuntual
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
+
+    debugPrint(
+      '¿PERMISO PUNTUAL CONCEDIDO?: $puedeProgramarPuntual → MODO: $modo',
+    );
+
     await _plugin.zonedSchedule(
       treatmentId,
       'Hora de tu medicamento 💊',
@@ -176,13 +294,7 @@ class NotificationService {
           presentAlert: true,
         ),
       ),
-      // Cambiado de "inexactAllowWhileIdle" a "exactAllowWhileIdle":
-      // un recordatorio de medicamento necesita precisión. El modo
-      // "inexact" puede retrasar la notificación varios minutos u
-      // horas en Doze, sobre todo en Xiaomi/Samsung/Huawei, y da la
-      // sensación de que "no llega". Requiere el permiso de alarmas
-      // exactas solicitado en requestPermissions().
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: modo,
       uiLocalNotificationDateInterpretation:
       UILocalNotificationDateInterpretation.absoluteTime,
     );

@@ -407,7 +407,12 @@ class _StartScreenState extends State<StartScreen>
     return _PressableScale(
       semanticsLabel: "Comenzar. Entrar a la aplicación",
       onTap: () async {
-        await NotificationService.instance.requestPermissions();
+        // Aquí sí hay context disponible (el usuario ya está viendo esta
+        // pantalla), así que este es el lugar correcto para mostrar el
+        // diálogo explicativo y pedir el permiso puntual.
+        await NotificationService.instance.requestExactAlarmPermission(
+          context,
+        );
 
         if (!context.mounted) return;
 

@@ -11,7 +11,6 @@
          se degradan a inexactas o no se disparan en dispositivos
          reales instalados desde Google Play. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
         android:label="MediCare"

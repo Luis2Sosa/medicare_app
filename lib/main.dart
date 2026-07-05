@@ -14,7 +14,11 @@ void main() async {
 
   try {
     await NotificationService.instance.init();
-    await NotificationService.instance.requestPermissions();
+    // Solo pedimos aquí el permiso normal de notificaciones (el diálogo
+    // estándar de Android). El permiso puntual (que necesita mostrar un
+    // diálogo explicativo con context) se pide más adelante, en
+    // start_screen.dart, cuando ya hay una pantalla construida.
+    await NotificationService.instance.requestNotificationsPermission();
   } catch (e) {
     debugPrint("Error iniciando notificaciones: $e");
   }
