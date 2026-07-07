@@ -49,6 +49,21 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+
+            // AGREGADO: si minifyEnabled/shrinkResources están activos (o se
+            // activan por defecto en tu variante de build), R8 puede
+            // descartar el ícono de notificación y clases del plugin
+            // flutter_local_notifications porque solo se referencian desde
+            // Dart (string) o desde AndroidManifest.xml, no desde código
+            // Kotlin/Java. Sin este proguardFiles(), esas reglas de "keep"
+            // nunca se aplican y las notificaciones fallan en silencio
+            // SOLO en release (Play Store), nunca en debug.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
