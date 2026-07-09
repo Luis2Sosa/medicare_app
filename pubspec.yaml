@@ -2,7 +2,7 @@ name: medicare_app
 description: "Aplicación de recordatorio de medicamentos (MediCare)"
 publish_to: 'none'
 
-version: 1.0.6+8
+version: 1.0.9+11
 
 environment:
   sdk: '>=3.9.0 <4.0.0'
@@ -46,4 +46,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/medicare_logo.png
+    # Apuntar a la carpeta completa es mejor práctica para incluir el logo,
+    # el icono y cualquier recurso visual futuro de una sola vez
+    - assets/images/

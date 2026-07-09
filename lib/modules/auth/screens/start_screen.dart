@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:medicare_app/core/app_theme.dart';
 import 'package:medicare_app/services/notification_service.dart';
+import 'package:url_launcher/url_launcher.dart'; // Asegúrate de tener esta importación
 
 double _clampD(num value, double lo, double hi) {
   return value.clamp(lo, hi).toDouble();
@@ -33,7 +34,6 @@ class _StartScreenState extends State<StartScreen>
       duration: const Duration(milliseconds: 850),
       vsync: this,
     )..forward();
-
   }
 
   @override
@@ -61,6 +61,61 @@ class _StartScreenState extends State<StartScreen>
     );
   }
 
+  /// NUEVO: Muestra un aviso claro diseñado para adultos mayores sobre la batería
+  Future<void> _verificarYPedirOptimizacionBateria(BuildContext context) async {
+    // Diálogo nativo explicativo con diseño limpio y Modo Oscuro/Claro integrado
+    bool? quiereDesactivar = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A), // Fondo oscuro amigable
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Row(
+            children: [
+              Icon(Icons.battery_alert_rounded, color: Colors.amber, size: 32),
+              SizedBox(width: 12),
+              Text(
+                'Aviso Importante',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Text(
+            'Para garantizar que tus alarmas de medicamentos suenen SIEMPRE a la hora exacta (incluso si el celular está bloqueado), Android necesita que desactives el ahorro de batería para esta app.\n\n'
+                'En la siguiente pantalla, busca "MediCare" y selecciona la opción "Sin restricciones" o "Permitir siempre".',
+            style: TextStyle(color: Colors.white70, fontSize: 17, height: 1.42),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Ahora no', style: TextStyle(color: Colors.grey, fontSize: 16)),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: _accentGreen),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Configurar ahora ⚙️', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (quiereDesactivar == true) {
+      // Abre directamente el menú de optimización de batería de Android
+      final Uri batteryUri = Uri.parse('action:android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS');
+      if (await canLaunchUrl(batteryUri)) {
+        await launchUrl(batteryUri);
+      } else {
+        // Alternativa genérica de ajustes si el fabricante del celular restringe el acceso directo
+        final Uri appSettingsUri = Uri.parse('action:android.settings.APPLICATION_DETAILS_SETTINGS?package=com.sosatechlab.medicare.medicare_app');
+        if (await canLaunchUrl(appSettingsUri)) {
+          await launchUrl(appSettingsUri);
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final logoFade = _fadeFor(0.0, 0.35);
@@ -84,14 +139,9 @@ class _StartScreenState extends State<StartScreen>
             gradient: AppTheme.mainGradient,
           ),
           child: SafeArea(
-            // "minimum" garantiza un respiro extra incluso si el sistema
-            // reporta un inset muy pequeño (algunos celulares con gestos).
             minimum: const EdgeInsets.only(bottom: 8),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                // MediaQuery.viewPadding.bottom NO es removido por SafeArea,
-                // así que aquí sabemos si el celular tiene barra de 3 botones
-                // (inset grande) o gestos/nada (inset chico o cero).
                 final systemNavInset = MediaQuery.of(context).viewPadding.bottom;
                 final m = _ScreenMetrics.of(constraints, systemNavInset);
 
@@ -118,9 +168,7 @@ class _StartScreenState extends State<StartScreen>
                                 opacity: logoFade,
                                 child: _logoHeader(m),
                               ),
-
                               SizedBox(height: m.mainGap),
-
                               FadeTransition(
                                 opacity: contentFade,
                                 child: SlideTransition(
@@ -128,9 +176,7 @@ class _StartScreenState extends State<StartScreen>
                                   child: _openContent(m),
                                 ),
                               ),
-
                               SizedBox(height: m.buttonSpace),
-
                               FadeTransition(
                                 opacity: buttonsFade,
                                 child: SlideTransition(
@@ -159,9 +205,6 @@ class _StartScreenState extends State<StartScreen>
     );
   }
 
-  // Se quitó el logo/cruz superior. Ahora el encabezado va directo con
-  // el nombre de la app, el detalle de latido y el subtítulo, con un
-  // poco más de espacio arriba para que no se vea vacío ni apretado.
   Widget _logoHeader(_ScreenMetrics m) {
     return Column(
       children: [
@@ -176,9 +219,7 @@ class _StartScreenState extends State<StartScreen>
             letterSpacing: -0.6,
           ),
         ),
-
         const SizedBox(height: 6),
-
         SizedBox(
           width: 200,
           height: 32,
@@ -201,9 +242,7 @@ class _StartScreenState extends State<StartScreen>
             ],
           ),
         ),
-
         const SizedBox(height: 6),
-
         Text(
           "Pensada para personas mayores",
           textAlign: TextAlign.center,
@@ -274,9 +313,7 @@ class _StartScreenState extends State<StartScreen>
                   ),
                 ),
               ),
-
               SizedBox(height: m.sectionGap),
-
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -319,9 +356,7 @@ class _StartScreenState extends State<StartScreen>
             ],
           ),
         ),
-
         SizedBox(height: m.featureTopGap),
-
         _featureRow(m),
       ],
     );
@@ -407,15 +442,19 @@ class _StartScreenState extends State<StartScreen>
     return _PressableScale(
       semanticsLabel: "Comenzar. Entrar a la aplicación",
       onTap: () async {
-        // Aquí sí hay context disponible (el usuario ya está viendo esta
-        // pantalla), así que este es el lugar correcto para mostrar el
-        // diálogo explicativo y pedir el permiso puntual.
+        // 1. Primero pedimos el permiso del sistema para Alertas Exactas
         await NotificationService.instance.requestExactAlarmPermission(
           context,
         );
 
         if (!context.mounted) return;
 
+        // 2. Interceptamos para que desactiven el optimizador de batería de Android
+        await _verificarYPedirOptimizacionBateria(context);
+
+        if (!context.mounted) return;
+
+        // 3. Pasamos al Home con la app blindada
         Navigator.pushReplacementNamed(context, "/home");
       },
       builder: (pressed) {
@@ -450,7 +489,7 @@ class _StartScreenState extends State<StartScreen>
                 color: Colors.white,
                 size: m.buttonArrowSize,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Text(
                 "Comenzar ahora",
                 style: TextStyle(
@@ -491,7 +530,7 @@ class _StartScreenState extends State<StartScreen>
                 color: AppTheme.primaryBlue,
                 size: m.aboutIconSize,
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Text(
                 "Acerca de MediCare",
                 style: TextStyle(
@@ -520,29 +559,19 @@ class _HeartbeatPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     final y = size.height / 2;
-
     final path = Path();
 
-    // Línea izquierda
     path.moveTo(0, y);
     path.lineTo(28, y);
-
-    // Pico ECG izquierdo
     path.lineTo(36, y - 8);
     path.lineTo(44, y + 8);
     path.lineTo(52, y);
-
-    // Espacio para el corazón
     path.lineTo(72, y);
     path.moveTo(108, y);
-
-    // Pico ECG derecho
     path.lineTo(128, y);
     path.lineTo(136, y - 8);
     path.lineTo(144, y + 8);
     path.lineTo(152, y);
-
-    // Línea final
     path.lineTo(size.width, y);
 
     canvas.drawPath(path, paint);
@@ -607,12 +636,10 @@ class _ScreenMetrics {
   final double horizontalPadding;
   final double topPadding;
   final double bottomPadding;
-
   final double logoSize;
   final double logoTitleSize;
   final double logoSubtitleGap;
   final double headerTextSize;
-
   final double mainGap;
   final double appNameSize;
   final double sloganSmallSize;
@@ -622,7 +649,6 @@ class _ScreenMetrics {
   final double descriptionLineHeight;
   final double clockBox;
   final double clockIcon;
-
   final double featureTopGap;
   final double featureHeight;
   final double chipGap;
@@ -630,20 +656,16 @@ class _ScreenMetrics {
   final double chipPaddingH;
   final double chipIconSize;
   final double chipFontSize;
-
   final double buttonHeight;
   final double buttonFontSize;
   final double buttonArrowSize;
-
   final double aboutButtonHeight;
   final double aboutIconSize;
   final double aboutTextSize;
-
   final double sectionGap;
   final double smallGap;
   final double tinyGap;
   final double buttonSpace;
-
   final bool isCompactHeight;
   final bool isCompactWidth;
 
@@ -692,23 +714,14 @@ class _ScreenMetrics {
     final width = constraints.maxWidth.isFinite ? constraints.maxWidth : 390.0;
     final height = constraints.maxHeight.isFinite ? constraints.maxHeight : 760.0;
 
-    // Escala en base a un diseño de referencia de 390x760 (iPhone estándar).
-    // Bajamos el piso de 0.82 a 0.70 para que celulares muy chicos (320-360
-    // de ancho, <600 de alto) también reduzcan tamaños en vez de desbordar.
     final widthScale = _clampD(width / 390.0, 0.70, 1.16);
     final heightScale = _clampD(height / 760.0, 0.66, 1.10);
     final scale = math.min(widthScale, heightScale);
 
     final isCompactHeight = height < 700;
-    // Pantallas muy chicas (ej. celulares gama baja, ~360x640 o menos).
     final isExtraCompactHeight = height < 620;
     final isCompactWidth = width < 370;
 
-    // Si el celular tiene barra de navegación de 3 botones, el inset del
-    // sistema suele ser bastante mayor (~40+) que el de gestos (~16-34) o
-    // el de celulares sin ninguna barra (0). Cuando detectamos una barra
-    // "gorda" agregamos un pequeño respiro visual extra para que los
-    // botones de la app no queden pegados a los botones del sistema.
     final hasChunkyNavBar = systemNavInset > 30;
     final extraBottomBreathingRoom = hasChunkyNavBar ? 10.0 : 4.0;
 
@@ -718,7 +731,6 @@ class _ScreenMetrics {
       bottomPadding:
       (isExtraCompactHeight ? 10 : (isCompactHeight ? 14 : 20)) +
           extraBottomBreathingRoom,
-
       logoSize: _clampD(
         (isExtraCompactHeight ? 96 : (isCompactHeight ? 120 : 150)) * scale,
         88,
@@ -727,12 +739,7 @@ class _ScreenMetrics {
       logoTitleSize: _clampD(40 * scale, 30, 48),
       logoSubtitleGap: isCompactHeight ? 8 : 12,
       headerTextSize: _clampD(16 * scale, 13.5, 18.5),
-
-      // Como ya no hay logo/imagen arriba, este espacio (entre el
-      // encabezado de texto y la tarjeta) puede ser un poco mayor para
-      // que la pantalla se sienta balanceada en vez de vacía arriba.
       mainGap: isExtraCompactHeight ? 26 : (isCompactHeight ? 34 : 48),
-
       appNameSize: _clampD(33 * scale, 26, 39),
       sloganSmallSize: _clampD(27 * scale, 20, 31),
       sloganBigSize: _clampD(31 * scale, 23, 36),
@@ -741,7 +748,6 @@ class _ScreenMetrics {
       descriptionLineHeight: _clampD(72 * scale, 50, 82),
       clockBox: _clampD(74 * scale, 52, 84),
       clockIcon: _clampD(40 * scale, 28, 46),
-
       featureTopGap: isExtraCompactHeight ? 10 : (isCompactHeight ? 14 : 20),
       featureHeight: _clampD(104 * scale, 82, 116),
       chipGap: isCompactWidth ? 8 : 12,
@@ -749,7 +755,6 @@ class _ScreenMetrics {
       chipPaddingH: isCompactWidth ? 4 : 7,
       chipIconSize: _clampD(29 * scale, 21, 33),
       chipFontSize: _clampD(14.5 * scale, 11.5, 16),
-
       buttonHeight: _clampD(
         (isExtraCompactHeight ? 52 : (isCompactHeight ? 58 : 66)) * scale,
         48,
@@ -757,16 +762,13 @@ class _ScreenMetrics {
       ),
       buttonFontSize: _clampD(20.5 * scale, 16, 23),
       buttonArrowSize: _clampD(25 * scale, 20, 28),
-
       aboutButtonHeight: _clampD(52 * scale, 44, 58),
       aboutIconSize: _clampD(20 * scale, 16, 22),
       aboutTextSize: _clampD(16.5 * scale, 13.5, 18),
-
       sectionGap: isExtraCompactHeight ? 10 : (isCompactHeight ? 14 : 18),
       smallGap: isExtraCompactHeight ? 8 : (isCompactHeight ? 10 : 13),
       tinyGap: 6,
       buttonSpace: isExtraCompactHeight ? 16 : (isCompactHeight ? 24 : 34),
-
       isCompactHeight: isCompactHeight,
       isCompactWidth: isCompactWidth,
     );
