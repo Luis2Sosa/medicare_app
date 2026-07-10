@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:medicare_app/core/app_theme.dart';
 import 'package:medicare_app/services/notification_service.dart';
-import 'package:url_launcher/url_launcher.dart'; // Asegúrate de tener esta importación
 
 double _clampD(num value, double lo, double hi) {
   return value.clamp(lo, hi).toDouble();
@@ -59,61 +58,6 @@ class _StartScreenState extends State<StartScreen>
         curve: Interval(start, end, curve: Curves.easeOutCubic),
       ),
     );
-  }
-
-  /// NUEVO: Muestra un aviso claro diseñado para adultos mayores sobre la batería
-  Future<void> _verificarYPedirOptimizacionBateria(BuildContext context) async {
-    // Diálogo nativo explicativo con diseño limpio y Modo Oscuro/Claro integrado
-    bool? quiereDesactivar = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A), // Fondo oscuro amigable
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Row(
-            children: [
-              Icon(Icons.battery_alert_rounded, color: Colors.amber, size: 32),
-              SizedBox(width: 12),
-              Text(
-                'Aviso Importante',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          content: Text(
-            'Para garantizar que tus alarmas de medicamentos suenen SIEMPRE a la hora exacta (incluso si el celular está bloqueado), Android necesita que desactives el ahorro de batería para esta app.\n\n'
-                'En la siguiente pantalla, busca "MediCare" y selecciona la opción "Sin restricciones" o "Permitir siempre".',
-            style: TextStyle(color: Colors.white70, fontSize: 17, height: 1.42),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Ahora no', style: TextStyle(color: Colors.grey, fontSize: 16)),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: _accentGreen),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Configurar ahora ⚙️', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (quiereDesactivar == true) {
-      // Abre directamente el menú de optimización de batería de Android
-      final Uri batteryUri = Uri.parse('action:android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS');
-      if (await canLaunchUrl(batteryUri)) {
-        await launchUrl(batteryUri);
-      } else {
-        // Alternativa genérica de ajustes si el fabricante del celular restringe el acceso directo
-        final Uri appSettingsUri = Uri.parse('action:android.settings.APPLICATION_DETAILS_SETTINGS?package=com.sosatechlab.medicare.medicare_app');
-        if (await canLaunchUrl(appSettingsUri)) {
-          await launchUrl(appSettingsUri);
-        }
-      }
-    }
   }
 
   @override
@@ -281,7 +225,7 @@ class _StartScreenState extends State<StartScreen>
             ],
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start, // 👈 Justo aquí
             children: [
               Text(
                 "Tus medicamentos,",
@@ -442,19 +386,14 @@ class _StartScreenState extends State<StartScreen>
     return _PressableScale(
       semanticsLabel: "Comenzar. Entrar a la aplicación",
       onTap: () async {
-        // 1. Primero pedimos el permiso del sistema para Alertas Exactas
+        // 🔥 SOLO FUNCIONA ACTIVAR NOTIFICACIONES EXACTAS
         await NotificationService.instance.requestExactAlarmPermission(
           context,
         );
 
         if (!context.mounted) return;
 
-        // 2. Interceptamos para que desactiven el optimizador de batería de Android
-        await _verificarYPedirOptimizacionBateria(context);
-
-        if (!context.mounted) return;
-
-        // 3. Pasamos al Home con la app blindada
+        // Redirección directa al Home sin interrupciones adicionales
         Navigator.pushReplacementNamed(context, "/home");
       },
       builder: (pressed) {

@@ -1,6 +1,8 @@
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:medicare_app/main.dart'; // Asegura importar tu main.dart para ver alarmCallback
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -67,15 +69,6 @@ class NotificationService {
   /// ---------------------------------------------------------------------
   /// FLUJO COMPLETO DE PERMISOS PARA EL USUARIO
   /// ---------------------------------------------------------------------
-  /// Pide SOLO el permiso normal de notificaciones (el diálogo estándar
-  /// de Android). No necesita BuildContext, así que es seguro llamarlo
-  /// desde main() antes de runApp(), donde todavía no existe ningún
-  /// widget en pantalla.
-  ///
-  /// Esto reemplaza al viejo requestPermissions() para el caso de
-  /// main.dart. NO pide el permiso puntual (SCHEDULE_EXACT_ALARM) aquí,
-  /// porque ese sí necesita mostrar un diálogo explicativo con context,
-  /// y en main() todavía no hay ninguna pantalla construida.
   Future<void> requestNotificationsPermission() async {
     final androidImpl =
     _plugin.resolvePlatformSpecificImplementation<
@@ -86,20 +79,11 @@ class NotificationService {
     debugPrint('PERMISO NOTIFICACIONES: $notificationPermission');
   }
 
-  /// Pide el permiso puntual (SCHEDULE_EXACT_ALARM) con un diálogo
-  /// explicativo previo. SÍ necesita BuildContext, así que solo se debe
-  /// llamar desde un widget ya construido — por ejemplo el botón
-  /// "Comenzar ahora" de tu pantalla de bienvenida.
-  ///
-  /// Al usuario solo le hablamos de "notificaciones puntuales" — nunca
-  /// de "alarmas", aunque por debajo Android sí llame así al permiso.
   Future<void> requestExactAlarmPermission(BuildContext context) async {
     final androidImpl =
     _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
 
-    // Si el usuario ya tiene el permiso puntual concedido, no lo
-    // molestamos con la pantalla de Ajustes.
     final bool yaTienePermisoPuntual =
         await androidImpl?.canScheduleExactNotifications() ?? false;
 
@@ -108,7 +92,6 @@ class NotificationService {
       return;
     }
 
-    // Explicamos ANTES de mandarlo a Ajustes, en lenguaje simple.
     if (!context.mounted) return;
     final bool? quiereActivarlo = await _mostrarExplicacionPermisoPuntual(
       context,
@@ -119,14 +102,10 @@ class NotificationService {
       return;
     }
 
-    // Esto abre la pantalla de Ajustes de Android. El usuario debe
-    // activar el switch manualmente; no hay diálogo emergente posible
-    // aquí, es una limitación del sistema operativo, no de tu app.
     final bool? resultadoSolicitud =
     await androidImpl?.requestExactAlarmsPermission();
     debugPrint('RESULTADO SOLICITUD PERMISO PUNTUAL: $resultadoSolicitud');
 
-    // Verificamos el estado real después de que el usuario regresó.
     final bool quedoConcedido =
         await androidImpl?.canScheduleExactNotifications() ?? false;
     debugPrint('¿PERMISO PUNTUAL QUEDÓ CONCEDIDO?: $quedoConcedido');
@@ -163,8 +142,6 @@ class NotificationService {
     );
   }
 
-  /// Llama esto en cualquier pantalla (ej. Ajustes de la app) para saber
-  /// si debes mostrar un aviso de "tus recordatorios pueden llegar tarde".
   Future<bool> tienePermisoNotificacionPuntual() async {
     final androidImpl =
     _plugin.resolvePlatformSpecificImplementation<
@@ -173,7 +150,7 @@ class NotificationService {
   }
 
   /// ---------------------------------------------------------------------
-  /// PROGRAMACIÓN DE RECORDATORIOS
+  /// PROGRAMACIÓN DE RECORDATORIOS (ACTUALIZADO A ALARM MANAGER)
   /// ---------------------------------------------------------------------
 
   Future<void> scheduleRemindersForTreatment({
@@ -217,13 +194,49 @@ class NotificationService {
   }
 
   Future<void> cancelRemindersForTreatment(int treatmentId) async {
+    // Cancela tanto el hilo del AlarmManager como la notificación local por si acaso
+    await AndroidAlarmManager.cancel(treatmentId);
     await _plugin.cancel(treatmentId);
-    debugPrint('NOTIFICACIÓN CANCELADA PARA TRATAMIENTO $treatmentId');
+    debugPrint('NOTIFICACIÓN Y ALARMA CANCELADAS PARA TRATAMIENTO $treatmentId');
   }
 
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
     debugPrint('TODAS LAS NOTIFICACIONES FUERON CANCELADAS');
+  }
+
+  /// 🔥 NUEVO MÉTODO: Invocado por la función global 'alarmCallback' en main.dart
+  /// Lanza la alerta en la pantalla de inmediato sin evaluar tiempos diferidos
+  Future<void> showImmediateNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      _channelId,
+      _channelName,
+      channelDescription: _channelDescription,
+      icon: 'ic_notification',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      category: AndroidNotificationCategory.reminder,
+      visibility: NotificationVisibility.public,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentSound: true,
+      presentAlert: true,
+    );
+
+    await _plugin.show(
+      id,
+      title,
+      body,
+      const NotificationDetails(android: androidDetails, iOS: iosDetails),
+    );
+    debugPrint('PINTANDO NOTIFICACIÓN INMEDIATA EN PANTALLA');
   }
 
   Future<void> _scheduleSingleReminder({
@@ -241,65 +254,34 @@ class NotificationService {
 
     debugPrint('HORA RECIBIDA: $hora');
     debugPrint('HORA CONVERTIDA: $hour:$minute');
-    debugPrint('NOTIFICACIÓN PROGRAMÁNDOSE PARA: $scheduledDate');
+    debugPrint('NOTIFICACIÓN NATIVA SOLICITADA PARA: $scheduledDate');
 
-    // ESTA ES LA LÍNEA QUE FALTABA EN EL ARCHIVO ORIGINAL. Sin esta
-    // verificación, el código asumía "exactAllowWhileIdle" siempre,
-    // incluso cuando el usuario instaló desde Google Play y el permiso
-    // SCHEDULE_EXACT_ALARM viene denegado por defecto en Android 13+
-    // (comportamiento documentado de Android, no un bug de tu app).
-    // Resultado: zonedSchedule() se ejecutaba sin lanzar error, pero
-    // Android descartaba la notificación en segundo plano porque no
-    // tenía autorización real para el modo exacto.
-    final androidImpl =
-    _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-
-    // CLAVE: verificamos el permiso ANTES de decidir el modo.
-    // Si el usuario nunca activó el permiso puntual, usamos el modo
-    // inexacto: la notificación SIEMPRE llega, aunque pueda demorar
-    // algunos minutos en dispositivos en reposo profundo. Esto evita
-    // el caso que reportaste: "no llega, nunca, en silencio total".
-    final bool puedeProgramarPuntual =
-        await androidImpl?.canScheduleExactNotifications() ?? false;
-
-    final AndroidScheduleMode modo = puedeProgramarPuntual
-        ? AndroidScheduleMode.exactAllowWhileIdle
-        : AndroidScheduleMode.inexactAllowWhileIdle;
-
-    debugPrint(
-      '¿PERMISO PUNTUAL CONCEDIDO?: $puedeProgramarPuntual → MODO: $modo',
+    // Convertimos de TZDateTime a un DateTime estándar requerido por el AlarmManager
+    final DateTime targetDateTime = DateTime(
+      scheduledDate.year,
+      scheduledDate.month,
+      scheduledDate.day,
+      scheduledDate.hour,
+      scheduledDate.minute,
     );
 
-    await _plugin.zonedSchedule(
+    // 🔥 SOLUCIÓN FINAL: Delegamos el control de la app al reloj nativo de Android.
+    // wakeup: true obliga a despertar el hardware del teléfono aunque esté suspendido sin cable USB.
+    // exact: true garantiza precisión absoluta al milisegundo.
+    final bool programadoExitoso = await AndroidAlarmManager.oneShotAt(
+      targetDateTime,
       treatmentId,
-      'Hora de tu medicamento 💊',
-      '$medicationName — $dosis',
-      scheduledDate,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          _channelId,
-          _channelName,
-          channelDescription: _channelDescription,
-          icon: 'ic_notification',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: true,
-          enableVibration: true,
-          category: AndroidNotificationCategory.reminder,
-          visibility: NotificationVisibility.public,
-        ),
-        iOS: DarwinNotificationDetails(
-          presentSound: true,
-          presentAlert: true,
-        ),
-      ),
-      androidScheduleMode: modo,
-      uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
+      alarmCallback, // Llama a la función raíz del main.dart
+      exact: true,
+      wakeup: true,
+      rescheduleOnReboot: true,
     );
 
-    debugPrint('NOTIFICACIÓN PROGRAMADA CORRECTAMENTE');
+    if (programadoExitoso) {
+      debugPrint('SISTEMA OPERATIVO ASIGNÓ ALARMA EXITOSAMENTE MEDIANTE ALARM_MANAGER');
+    } else {
+      debugPrint('ERROR CRÍTICO: El reloj del sistema rechazó la alarma');
+    }
   }
 
   int _parseHoraATotalMinutos(String horaTexto) {
